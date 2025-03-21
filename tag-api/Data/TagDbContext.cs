@@ -17,7 +17,7 @@ namespace tag_api.Data
         public DbSet<UserTransportation> UserTransportations { get; set; }
         public DbSet<UserPenalty> UserPenalties { get; set; }
 
-        // Configuring relationships (if any are required)
+        // Configuring relationships (if any are )
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

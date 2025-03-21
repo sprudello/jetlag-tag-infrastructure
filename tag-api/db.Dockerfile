@@ -4,4 +4,4 @@ ENV ACCEPT_EULA=Y
 ENV SA_PASSWORD=myPassword1!
 
 # Add optional environment variable for database name
-ENV MSSQL_DBNAME=product_db
+ENV MSSQL_DBNAME=tagDb
