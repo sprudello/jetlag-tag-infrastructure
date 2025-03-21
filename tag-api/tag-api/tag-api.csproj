@@ -5,13 +5,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>tag_api</RootNamespace>
-    <UserSecretsId>851d5c5a-8fc4-4aa1-8700-592ac29eefe4</UserSecretsId>
+    <UserSecretsId>c2ea784a-0cce-4800-bb04-4e2e9d70dabe</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>.</DockerfileContext>
-    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.3">
       <PrivateAssets>all</PrivateAssets>
@@ -22,8 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ModelsDTO\" />
-    <Folder Include="Data\" />
+    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>
