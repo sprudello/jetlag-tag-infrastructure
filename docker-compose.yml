@@ -1,0 +1,6 @@
+services:
+  tag-api:
+    image: ${DOCKER_REGISTRY-}tagapi
+    build:
+      context: tag-api
+      dockerfile: Dockerfile
