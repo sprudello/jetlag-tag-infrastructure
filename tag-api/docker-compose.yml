@@ -1,0 +1,21 @@
+name: product_services
+services:
+  tag-api:
+    container_name: tag_api
+    build:
+      context: .
+      dockerfile: tag-api/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - docker_sqlserver
+
+  docker_sqlserver:
+    container_name: docker_sqlserver
+    build:
+      context: .
+      dockerfile: tag-api/db.Dockerfile
+    ports:
+      - "1433:1433"
