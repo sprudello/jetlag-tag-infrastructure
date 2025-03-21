@@ -1,0 +1,45 @@
+@forward 'variables';
+@use 'variables' as vars;
+
+// Flexbox mixins
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// Media query mixins
+@mixin mobile {
+  @media (max-width: vars.$breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: vars.$breakpoint-sm) and (max-width: vars.$breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: vars.$breakpoint-lg) {
+    @content;
+  }
+}
+
+// Button mixins
+@mixin button-base {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}

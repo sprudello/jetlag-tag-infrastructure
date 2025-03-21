@@ -1,0 +1,17 @@
+@use '../variables' as vars;
+@use '../mixins' as mix;
+
+.header {
+  background-color: rgba(30, 30, 30, 0.8) !important;
+  backdrop-filter: blur(10px);
+  
+  .MuiToolbar-root {
+    padding-left: vars.$spacing-lg;
+    padding-right: vars.$spacing-lg;
+    
+    @include mix.mobile {
+      padding-left: vars.$spacing-md;
+      padding-right: vars.$spacing-md;
+    }
+  }
+}

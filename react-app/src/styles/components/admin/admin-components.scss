@@ -1,0 +1,31 @@
+@use '../../variables' as vars;
+@use '../../mixins' as mix;
+
+.admin-table {
+  margin-top: vars.$spacing-md;
+  
+  &__actions {
+    display: flex;
+    gap: vars.$spacing-sm;
+  }
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-md;
+  padding: vars.$spacing-md 0;
+  
+  &__row {
+    display: flex;
+    gap: vars.$spacing-md;
+    
+    @include mix.mobile {
+      flex-direction: column;
+    }
+  }
+  
+  &__field {
+    flex: 1;
+  }
+}

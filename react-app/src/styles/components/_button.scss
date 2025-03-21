@@ -1,0 +1,29 @@
+@use 'sass:color';
+@use '../variables' as vars;
+@use '../mixins' as mix;
+
+.button {
+  @include mix.button-base;
+  background-color: vars.$primary-color;
+  color: white;
+  
+  &:hover {
+    border-color: vars.$primary-color-hover;
+    background-color: color.adjust(vars.$primary-color, $lightness: -10%);
+  }
+  
+  &:focus,
+  &:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+  }
+  
+  &--secondary {
+    background-color: transparent;
+    border: 1px solid vars.$primary-color;
+    color: vars.$primary-color;
+    
+    &:hover {
+      background-color: rgba(vars.$primary-color, 0.1);
+    }
+  }
+}

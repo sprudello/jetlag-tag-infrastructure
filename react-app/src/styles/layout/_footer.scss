@@ -1,0 +1,35 @@
+@use '../variables' as vars;
+
+.footer {
+  width: 100%;
+  padding: vars.$spacing-lg;
+  background-color: rgba(0, 0, 0, 0.2);
+  margin-top: auto;
+  
+  &__container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: vars.$spacing-lg;
+  }
+  
+  &__section {
+    flex: 1;
+    min-width: 200px;
+  }
+  
+  &__title {
+    font-weight: bold;
+    margin-bottom: vars.$spacing-md;
+  }
+  
+  &__copyright {
+    width: 100%;
+    text-align: center;
+    margin-top: vars.$spacing-lg;
+    padding-top: vars.$spacing-md;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}

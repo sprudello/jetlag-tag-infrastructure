@@ -1,0 +1,47 @@
+@use '../variables' as vars;
+@use '../mixins' as mix;
+
+.challenge-details-overlay {
+  .overlay-content {
+    max-width: 600px;
+  }
+  
+  .challenge-details {
+    padding: vars.$spacing-lg;
+    margin: vars.$spacing-lg 0;
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  
+  .reward-details {
+    margin-top: vars.$spacing-md;
+    padding: vars.$spacing-md;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  .multiplier-info {
+    margin: vars.$spacing-md 0;
+    
+    .multiplier-value {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+  }
+  
+  .total-reward {
+    margin-top: vars.$spacing-md;
+    
+    .reward-value {
+      color: #4CAF50;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+  }
+  
+  .overlay-actions {
+    display: flex;
+    justify-content: center;
+    gap: vars.$spacing-md;
+    margin-top: vars.$spacing-lg;
+  }
+}

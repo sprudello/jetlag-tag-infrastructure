@@ -1,0 +1,34 @@
+@use '../variables' as vars;
+@use '../mixins' as mix;
+
+.footer {
+  background-color: rgba(30, 30, 30, 0.8);
+  padding: vars.$spacing-md 0;
+  margin-top: auto;
+  font-size: 0.875rem;
+  
+  .footer-section {
+    padding: vars.$spacing-md;
+  }
+  
+  .footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    
+    li {
+      margin-bottom: vars.$spacing-md;
+      display: inline-block;
+    }
+    
+    a {
+      text-decoration: none;
+      transition: color 0.3s ease;
+      font-size: 0.875rem;
+      
+      &:hover {
+        color: vars.$primary-color;
+      }
+    }
+  }
+}

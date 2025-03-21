@@ -1,0 +1,27 @@
+@use '../variables' as vars;
+
+.card {
+  padding: vars.$spacing-lg;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+  }
+  
+  &__title {
+    font-size: 1.5em;
+    margin-bottom: vars.$spacing-md;
+  }
+  
+  &__content {
+    margin-bottom: vars.$spacing-md;
+  }
+  
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+  }
+}

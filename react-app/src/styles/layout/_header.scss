@@ -1,0 +1,28 @@
+@use '../variables' as vars;
+
+.header {
+  width: 100%;
+  padding: vars.$spacing-md vars.$spacing-lg;
+  background-color: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  
+  &__container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  &__logo {
+    height: 2.5rem;
+  }
+  
+  &__nav {
+    display: flex;
+    gap: vars.$spacing-md;
+  }
+}

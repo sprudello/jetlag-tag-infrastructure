@@ -1,0 +1,57 @@
+@use '../variables' as vars;
+@use '../mixins' as mix;
+
+.shop-overlay {
+  .overlay-content {
+    max-width: 600px;
+  }
+  
+  .coin-display {
+    margin: vars.$spacing-md 0;
+    
+    .coin-icon {
+      color: gold;
+      margin-right: vars.$spacing-sm;
+    }
+  }
+  
+  .multiplier-selector {
+    margin: vars.$spacing-lg 0;
+  }
+  
+  .slider-container {
+    padding: vars.$spacing-md vars.$spacing-lg;
+    margin: vars.$spacing-md 0;
+  }
+  
+  .multiplier-slider {
+    margin: vars.$spacing-md 0;
+    
+    .MuiSlider-markLabel {
+      font-size: 0.8rem;
+    }
+    
+    .MuiSlider-thumb {
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  .selected-multiplier {
+    color: vars.$primary-color;
+    font-weight: bold;
+    font-size: 1.2em;
+  }
+  
+  .cost-display {
+    margin: vars.$spacing-md 0;
+    font-weight: bold;
+  }
+  
+  .shop-actions {
+    display: flex;
+    justify-content: center;
+    gap: vars.$spacing-md;
+    margin-top: vars.$spacing-lg;
+  }
+}

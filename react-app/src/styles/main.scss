@@ -1,0 +1,18 @@
+// Main SCSS file that loads all other style files
+
+// Forward variables and mixins für globalen Zugriff
+@forward 'variables';
+@forward 'mixins';
+
+// Load component styles
+@use 'components/button' as button;
+@use 'components/card' as card;
+@use 'components/admin/admin-components' as admin;
+
+// Load layout styles
+@use 'layout/header' as header;
+@use 'layout/footer' as footer;
+@use 'layout/main' as main;
+
+// Load page-specific styles
+@use 'pages/home' as home;
