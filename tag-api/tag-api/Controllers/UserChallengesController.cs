@@ -119,5 +119,17 @@ namespace tag_api.Controllers
 
             return Ok(new { message = "Challenge failed. Penalty applied." });
         }
+        // GET: api/UserChallenges/challengeCounts/{userId}
+        [HttpGet("/challengeCounts/{userId}")]
+        public async Task<IActionResult> GetChallengeCounts(int userId)
+        {
+            var successCount = await _context.UserChallenges
+                .CountAsync(uc => uc.UserId == userId && uc.Status == ChallengeStatus.Completed);
+
+            var failedCount = await _context.UserChallenges
+                .CountAsync(uc => uc.UserId == userId && uc.Status == ChallengeStatus.Failed);
+
+            return Ok(new { successCount, failedCount });
+        }
     }
 }
