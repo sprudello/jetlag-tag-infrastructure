@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using tag_api.Models;
 
-namespace TestBecauseHUUUH.Data
+namespace tag_api.Data
 {
     public class DataContext : DbContext
     {

@@ -1,6 +1,5 @@
-
 using Microsoft.EntityFrameworkCore;
-using TestBecauseHUUUH.Data;
+using tag_api.Data;
 
 namespace tag_api
 {
@@ -11,7 +10,6 @@ namespace tag_api
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
             builder.Services.AddControllers();
 
             // Register the DataContext with a connection string.
@@ -31,12 +29,18 @@ namespace tag_api
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
-
             app.MapControllers();
+
+            // Apply any pending migrations at startup.
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+                dbContext.Database.Migrate();
+            }
 
             app.Run();
         }
