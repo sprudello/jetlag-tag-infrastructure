@@ -61,7 +61,7 @@ const Header = ({ onPageChange }) => {
     { name: 'Users', icon: <ProfileIcon fontSize="small" /> },
     { name: 'Profile', icon: <ProfileIcon fontSize="small" /> }
   ];
-  
+
   const userNavItems = [
     { name: 'Home', icon: <HomeIcon fontSize="small" /> },
     { name: 'Challenges', icon: <ChallengesIcon fontSize="small" /> },

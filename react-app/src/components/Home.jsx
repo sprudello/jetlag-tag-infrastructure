@@ -10,7 +10,8 @@ import {
   Button,
   Chip,
   Divider,
-  CircularProgress
+  CircularProgress,
+  Avatar
 } from '@mui/material';
 import { 
   EmojiEvents as ChallengeIcon,
@@ -214,14 +215,28 @@ const Home = () => {
 
   return (
     <Box className="home-container">
-      <Box className="welcome-section">
-        <Typography variant="h4" component="h1" gutterBottom>
-          Welcome, {currentUser?.username || 'User'}!
-        </Typography>
-        <Typography variant="body1">
-          Ready for your next challenge? Check out what's available below.
-        </Typography>
-      </Box>
+      <Paper elevation={2} className="welcome-section">
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar 
+            sx={{ 
+              width: 60, 
+              height: 60, 
+              bgcolor: currentUser?.isAdmin ? 'secondary.main' : 'primary.main',
+              fontSize: '1.5rem'
+            }}
+          >
+            {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
+          </Avatar>
+          <Box>
+            <Typography variant="h4" component="h1" gutterBottom>
+              Welcome, {currentUser?.username || 'User'}!
+            </Typography>
+            <Typography variant="body1">
+              Ready for your next challenge? Check out what's available below.
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
 
       {renderSection(
         "Active Challenges", 

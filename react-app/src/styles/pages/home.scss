@@ -5,8 +5,11 @@
   padding: vars.$spacing-md;
   
   .welcome-section {
-    text-align: center;
+    padding: vars.$spacing-md;
     margin-bottom: vars.$spacing-lg;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
   }
   
   .home-section {

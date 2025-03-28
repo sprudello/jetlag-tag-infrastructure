@@ -97,7 +97,7 @@ const Profile = () => {
               />
             )}
             <Box className="currency-display">
-              <CurrencyIcon color="primary" />
+              <CurrencyIcon sx={{ color: 'gold' }} />
               <Typography variant="h6">
                 {userData?.currency} coins
               </Typography>
