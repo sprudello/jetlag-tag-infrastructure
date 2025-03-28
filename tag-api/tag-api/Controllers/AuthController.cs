@@ -62,7 +62,7 @@ namespace tag_api.Controllers
             return Ok(new { Message = "Registration successful", IsAdmin = isAdmin });
 
         }
-        [HttpPost("login")]
+        [HttpPost("/login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginDto)
         {
             if (string.IsNullOrWhiteSpace(loginDto.Username) || string.IsNullOrWhiteSpace(loginDto.Password))
