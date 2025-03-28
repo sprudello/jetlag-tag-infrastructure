@@ -18,7 +18,7 @@ namespace tag_api.Controllers
         }
 
         // GET: api/item
-        [HttpGet("/getAllItems")]
+        [HttpGet("/AllItems")]
         public async Task<ActionResult<IEnumerable<ItemDTO>>> GetItems()
         {
             var items = await _context.Items.Select(item => new ItemDTO
@@ -34,7 +34,7 @@ namespace tag_api.Controllers
         }
 
         // GET: api/item/{id}
-        [HttpGet("/getItem/{id}")]
+        [HttpGet("/Item/{id}")]
         public async Task<ActionResult<ItemDTO>> GetItem(int id)
         {
             var item = await _context.Items.FindAsync(id);
