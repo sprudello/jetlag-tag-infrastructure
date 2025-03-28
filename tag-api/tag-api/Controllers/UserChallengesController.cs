@@ -21,6 +21,12 @@ namespace tag_api.Controllers
         [HttpGet("/pullCard/{userId}")]
         public async Task<IActionResult> PullCard(int userId)
         {
+            // Check for active penalty.
+            bool hasActivePenalty = await _context.UserPenalties
+                .AnyAsync(up => up.UserId == userId && up.EndTime > DateTime.UtcNow);
+            if (hasActivePenalty)
+                return BadRequest("Action blocked due to active penalty.");
+
             // Retrieve IDs of cards already pulled by the user.
             var pulledCardIds = await _context.UserChallenges
                 .Where(uc => uc.UserId == userId)
@@ -45,7 +51,7 @@ namespace tag_api.Controllers
                 UserId = userId,
                 CardId = card.Id,
                 StartTime = DateTime.UtcNow,
-                EndTime = DateTime.UtcNow, // Initially set to UtcNow; will update on success/fail.
+                EndTime = DateTime.UtcNow, // Will update on success/fail.
                 HasMultiplier = false,
                 Status = ChallengeStatus.InProgress
             };
@@ -60,6 +66,12 @@ namespace tag_api.Controllers
         [HttpPost("/success")]
         public async Task<IActionResult> CompleteChallengeSuccess([FromBody] CompleteChallengeRequestDTO request)
         {
+            // Check for active penalty.
+            bool hasActivePenalty = await _context.UserPenalties
+                .AnyAsync(up => up.UserId == request.UserId && up.EndTime > DateTime.UtcNow);
+            if (hasActivePenalty)
+                return BadRequest("Action blocked due to active penalty.");
+
             var userChallenge = await _context.UserChallenges
                 .Include(uc => uc.ChallengeCard)
                 .FirstOrDefaultAsync(uc => uc.Id == request.UserChallengeId);
@@ -90,6 +102,12 @@ namespace tag_api.Controllers
         [HttpPost("/fail")]
         public async Task<IActionResult> CompleteChallengeFail([FromBody] FailChallengeRequestDTO request)
         {
+            // Check for active penalty.
+            bool hasActivePenalty = await _context.UserPenalties
+                .AnyAsync(up => up.UserId == request.UserId && up.EndTime > DateTime.UtcNow);
+            if (hasActivePenalty)
+                return BadRequest("Action blocked due to active penalty.");
+
             var userChallenge = await _context.UserChallenges.FirstOrDefaultAsync(uc => uc.Id == request.UserChallengeId);
             if (userChallenge == null)
                 return NotFound("User challenge not found.");
@@ -119,10 +137,12 @@ namespace tag_api.Controllers
 
             return Ok(new { message = "Challenge failed. Penalty applied." });
         }
+
         // GET: api/UserChallenges/challengeCounts/{userId}
         [HttpGet("/challengeCounts/{userId}")]
         public async Task<IActionResult> GetChallengeCounts(int userId)
         {
+            // Note: You might decide not to block reporting stats even if there is an active penalty.
             var successCount = await _context.UserChallenges
                 .CountAsync(uc => uc.UserId == userId && uc.Status == ChallengeStatus.Completed);
 

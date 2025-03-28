@@ -17,10 +17,16 @@ namespace tag_api.Controllers
             _context = context;
         }
 
-        // POST: api/UserTransportations/buy
+        // POST: api/UserTransportations/buyTransportation
         [HttpPost("/buyTransportation")]
         public async Task<IActionResult> PurchaseTransportation([FromBody] PurchaseTransportationDTO request)
         {
+            // Check for active penalty.
+            bool hasActivePenalty = await _context.UserPenalties
+                .AnyAsync(up => up.UserId == request.UserId && up.EndTime > DateTime.UtcNow);
+            if (hasActivePenalty)
+                return BadRequest("Action blocked due to active penalty.");
+
             // Validate the request.
             if (request.DurationInMinutes <= 0)
                 return BadRequest("Duration must be greater than zero.");
