@@ -21,7 +21,9 @@ import {
 } from '@mui/material';
 import { 
   Edit as EditIcon, 
-  Person as UserIcon 
+  Person as UserIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -30,6 +32,7 @@ const UsersManager = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [visibleCurrencies, setVisibleCurrencies] = useState({});
   const [editFormData, setEditFormData] = useState({
     username: '',
     isAdmin: false,
@@ -138,7 +141,18 @@ const UsersManager = () => {
               <TableRow key={user.id}>
                 <TableCell>{user.id}</TableCell>
                 <TableCell>{user.username}</TableCell>
-                <TableCell>{user.currency} coins</TableCell>
+                <TableCell>
+                  {visibleCurrencies[user.id] ? `${user.currency} coins` : '••••••'}
+                  <IconButton 
+                    size="small" 
+                    onClick={() => setVisibleCurrencies(prev => ({
+                      ...prev,
+                      [user.id]: !prev[user.id]
+                    }))}
+                  >
+                    {visibleCurrencies[user.id] ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                  </IconButton>
+                </TableCell>
                 <TableCell>
                   {user.isAdmin ? 'Admin' : 'User'}
                 </TableCell>
