@@ -27,7 +27,7 @@ import { useTheme } from '@mui/material/styles';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/components/header.scss';
 
-const Header = ({ onPageChange }) => {
+function Header({ onPageChange }) {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
   const [currentPage, setCurrentPage] = useState('Home');
@@ -50,6 +50,12 @@ const Header = ({ onPageChange }) => {
     }
   };
   
+  const handleProfileClick = () => {
+    // Navigate to the appropriate profile page based on user role
+    const profilePage = currentUser?.isAdmin ? 'AdminProfile' : 'Profile';
+    handlePageChange(profilePage);
+  };
+  
   const handleLogout = () => {
     logout();
     handleClose();
@@ -59,7 +65,7 @@ const Header = ({ onPageChange }) => {
   const adminNavItems = [
     { name: 'Dashboard', icon: <DashboardIcon fontSize="small" /> },
     { name: 'Users', icon: <ProfileIcon fontSize="small" /> },
-    { name: 'Profile', icon: <ProfileIcon fontSize="small" /> }
+    { name: 'Profile', icon: <ProfileIcon fontSize="small" />, onClick: handleProfileClick }
   ];
 
   const userNavItems = [
@@ -67,7 +73,7 @@ const Header = ({ onPageChange }) => {
     { name: 'Challenges', icon: <ChallengesIcon fontSize="small" /> },
     { name: 'Transportations', icon: <TransportIcon fontSize="small" /> },
     { name: 'Items', icon: <ItemsIcon fontSize="small" /> },
-    { name: 'Profile', icon: <ProfileIcon fontSize="small" /> }
+    { name: 'Profile', icon: <ProfileIcon fontSize="small" />, onClick: handleProfileClick }
   ];
   
   const navItems = currentUser?.isAdmin ? adminNavItems : userNavItems;
@@ -85,7 +91,7 @@ const Header = ({ onPageChange }) => {
               key={item.name}
               startIcon={item.icon}
               color={currentPage === item.name ? "primary" : "inherit"}
-              onClick={() => handlePageChange(item.name)}
+              onClick={item.onClick ? item.onClick : () => handlePageChange(item.name)}
               sx={{ mx: 1 }}
               disabled={!isAuthenticated}
             >
@@ -143,13 +149,20 @@ const Header = ({ onPageChange }) => {
             )}
           </Box>
           <Divider />
-          <MenuItem onClick={handleClose}>
+          <MenuItem onClick={() => {
+            handleClose();
+            handleProfileClick();
+          }}>
             <ListItemIcon>
               <ProfileIcon fontSize="small" />
             </ListItemIcon>
             My Profile
           </MenuItem>
-          <MenuItem onClick={handleClose}>
+          <MenuItem onClick={() => {
+            handleClose();
+            // Show prank message
+            alert("Get pranked!");
+          }}>
             <ListItemIcon>
               <SettingsIcon fontSize="small" />
             </ListItemIcon>

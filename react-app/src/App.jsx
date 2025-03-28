@@ -14,6 +14,8 @@ import Challenges from './components/Challenges'
 import Transportations from './components/Transportations'
 import Items from './components/Items'
 import Profile from './components/Profile'
+import AdminProfile from './components/admin/AdminProfile'
+import UsersManager from './components/admin/UsersManager'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 
 function AppContent() {
@@ -44,6 +46,10 @@ function AppContent() {
         return <Items />;
       case 'Profile':
         return <Profile />;
+      case 'AdminProfile':
+        return <AdminProfile />;
+      case 'Users':
+        return <UsersManager />;
       default:
         return <Home />;
     }

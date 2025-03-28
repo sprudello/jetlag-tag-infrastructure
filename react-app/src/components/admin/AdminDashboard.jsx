@@ -14,12 +14,14 @@ import {
   EmojiEvents as ChallengesIcon,
   ShoppingCart as ShopIcon,
   DirectionsCar as TransportIcon,
-  Timer as PenaltyIcon
+  Timer as PenaltyIcon,
+  Person as UsersIcon
 } from '@mui/icons-material';
 import ChallengeManager from './ChallengeManager';
 import ShopItemManager from './ShopItemManager';
 import TransportationManager from './TransportationManager';
 import PenaltyManager from './PenaltyManager';
+import UsersManager from './UsersManager';
 import '../../styles/components/admin/admin-dashboard.scss';
 
 const AdminDashboard = () => {
@@ -77,6 +79,8 @@ const AdminDashboard = () => {
         return <TransportationManager />;
       case 4: // Penalty
         return <PenaltyManager />;
+      case 5: // Users
+        return <UsersManager />;
       default:
         return null;
     }
@@ -102,6 +106,7 @@ const AdminDashboard = () => {
           <Tab icon={<ShopIcon />} label="Shop Items" />
           <Tab icon={<TransportIcon />} label="Transportation" />
           <Tab icon={<PenaltyIcon />} label="Penalty Time" />
+          <Tab icon={<UsersIcon />} label="Users" />
         </Tabs>
       </Box>
       
