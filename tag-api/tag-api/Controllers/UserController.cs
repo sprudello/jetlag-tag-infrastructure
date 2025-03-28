@@ -30,7 +30,7 @@ namespace tag_api.Controllers
 
             return Ok(response);
         }
-        [HttpPut("{id}")]
+        [HttpPut("/editUser/{id}")]
         // [Authorize(Roles = "Admin")] // Uncomment if using JWT and role-based authorization
         public async Task<IActionResult> EditUser(int id, [FromBody] EditUserDTO editDto)
         {
