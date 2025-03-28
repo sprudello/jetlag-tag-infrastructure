@@ -38,13 +38,13 @@ function AppContent() {
   
   return (
     <div className="app">
-      <Header onPageChange={setCurrentPage} />
+      {isAuthenticated && <Header onPageChange={setCurrentPage} />}
       
       <Container maxWidth="lg" sx={{ mt: 4, textAlign: 'center' }}>
         {renderPage()}
       </Container>
       
-      <Footer />
+      {isAuthenticated && <Footer />}
     </div>
   )
 }

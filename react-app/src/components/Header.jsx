@@ -55,13 +55,22 @@ const Header = ({ onPageChange }) => {
     handleClose();
   };
   
-  const navItems = [
+  // Different navigation items based on user role
+  const adminNavItems = [
+    { name: 'Dashboard', icon: <DashboardIcon fontSize="small" /> },
+    { name: 'Users', icon: <ProfileIcon fontSize="small" /> },
+    { name: 'Profile', icon: <ProfileIcon fontSize="small" /> }
+  ];
+  
+  const userNavItems = [
     { name: 'Home', icon: <HomeIcon fontSize="small" /> },
     { name: 'Challenges', icon: <ChallengesIcon fontSize="small" /> },
     { name: 'Transportations', icon: <TransportIcon fontSize="small" /> },
     { name: 'Items', icon: <ItemsIcon fontSize="small" /> },
     { name: 'Profile', icon: <ProfileIcon fontSize="small" /> }
   ];
+  
+  const navItems = currentUser?.isAdmin ? adminNavItems : userNavItems;
   
   return (
     <AppBar position="static" color="default" elevation={1} className="header">
