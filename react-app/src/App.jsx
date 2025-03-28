@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { 
   Container,
   Box
@@ -7,42 +7,27 @@ import './App.scss'
 import ChallengeGame from './components/ChallengeGame'
 import Header from './components/Header'
 import Footer from './components/Footer'
-import ModeSelection from './components/ModeSelection'
 import AdminDashboard from './components/admin/AdminDashboard'
+import AuthPage from './components/auth/AuthPage'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 
-function App() {
-  const [mode, setMode] = useState(null); // 'admin' or 'user' or null
+function AppContent() {
   const [currentPage, setCurrentPage] = useState('Home');
-  
-  // Check if mode is already selected in localStorage
-  useEffect(() => {
-    const savedMode = localStorage.getItem('appMode');
-    if (savedMode) {
-      setMode(savedMode);
-    }
-  }, []);
-  
-  const handleSelectMode = (selectedMode) => {
-    if (selectedMode) {
-      setMode(selectedMode);
-      localStorage.setItem('appMode', selectedMode);
-    } else {
-      setMode(null);
-      localStorage.removeItem('appMode');
-    }
-  };
+  const { isAuthenticated, currentUser } = useAuth();
   
   // This would be used to render different pages based on navigation
   const renderPage = () => {
-    if (!mode) {
-      return <ModeSelection onSelectMode={handleSelectMode} />;
+    // If not authenticated, show auth page
+    if (!isAuthenticated) {
+      return <AuthPage />;
     }
     
-    if (mode === 'admin') {
+    // If authenticated, check if admin
+    if (currentUser?.isAdmin) {
       return <AdminDashboard />;
     }
     
-    // User mode
+    // Regular user mode
     switch(currentPage) {
       case 'Home':
       case 'Challenges':
@@ -53,7 +38,7 @@ function App() {
   
   return (
     <div className="app">
-      <Header mode={mode} onModeChange={handleSelectMode} />
+      <Header onPageChange={setCurrentPage} />
       
       <Container maxWidth="lg" sx={{ mt: 4, textAlign: 'center' }}>
         {renderPage()}
@@ -61,6 +46,14 @@ function App() {
       
       <Footer />
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 

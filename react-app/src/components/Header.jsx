@@ -21,16 +21,17 @@ import {
   Person as ProfileIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
-  Dashboard as DashboardIcon,
-  AdminPanelSettings as AdminIcon
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import { useAuth } from '../contexts/AuthContext';
 import '../styles/components/header.scss';
 
-const Header = ({ mode = null, onModeChange }) => {
+const Header = ({ onPageChange }) => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
   const [currentPage, setCurrentPage] = useState('Home');
+  const { isAuthenticated, logout, currentUser } = useAuth();
   
   const open = Boolean(anchorEl);
   
@@ -44,12 +45,13 @@ const Header = ({ mode = null, onModeChange }) => {
   
   const handlePageChange = (page) => {
     setCurrentPage(page);
+    if (onPageChange) {
+      onPageChange(page);
+    }
   };
   
-  const handleSwitchMode = () => {
-    if (mode) {
-      onModeChange(mode === 'admin' ? 'user' : 'admin');
-    }
+  const handleLogout = () => {
+    logout();
     handleClose();
   };
   
@@ -76,7 +78,7 @@ const Header = ({ mode = null, onModeChange }) => {
               color={currentPage === item.name ? "primary" : "inherit"}
               onClick={() => handlePageChange(item.name)}
               sx={{ mx: 1 }}
-              disabled={!mode}
+              disabled={!isAuthenticated}
             >
               {item.name}
             </Button>
@@ -84,26 +86,29 @@ const Header = ({ mode = null, onModeChange }) => {
         </Box>
         
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton
-            onClick={handleClick}
-            size="small"
-            aria-controls={open ? 'account-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? 'true' : undefined}
-            disabled={!mode}
-          >
-            <Avatar sx={{ width: 32, height: 32, bgcolor: mode === 'admin' ? theme.palette.secondary.main : theme.palette.primary.main }}>
-              {mode ? (mode === 'admin' ? 'A' : 'U') : '?'}
-            </Avatar>
-          </IconButton>
-          
-          {mode === 'admin' && (
-            <Chip 
-              label="Admin" 
-              color="secondary" 
-              size="small" 
-              sx={{ ml: 1 }}
-            />
+          {isAuthenticated && (
+            <>
+              <IconButton
+                onClick={handleClick}
+                size="small"
+                aria-controls={open ? 'account-menu' : undefined}
+                aria-haspopup="true"
+                aria-expanded={open ? 'true' : undefined}
+              >
+                <Avatar sx={{ width: 32, height: 32, bgcolor: currentUser?.isAdmin ? theme.palette.secondary.main : theme.palette.primary.main }}>
+                  {currentUser?.isAdmin ? 'A' : 'U'}
+                </Avatar>
+              </IconButton>
+              
+              {currentUser?.isAdmin && (
+                <Chip 
+                  label="Admin" 
+                  color="secondary" 
+                  size="small" 
+                  sx={{ ml: 1 }}
+                />
+              )}
+            </>
           )}
         </Box>
         
@@ -117,9 +122,9 @@ const Header = ({ mode = null, onModeChange }) => {
         >
           <Box sx={{ px: 2, py: 1 }}>
             <Typography variant="subtitle1">
-              Username
+              {currentUser?.username || 'Guest'}
             </Typography>
-            {mode === 'admin' && (
+            {currentUser?.isAdmin && (
               <Chip 
                 label="Admin" 
                 color="secondary" 
@@ -142,14 +147,7 @@ const Header = ({ mode = null, onModeChange }) => {
             Settings
           </MenuItem>
           <Divider />
-          <MenuItem onClick={handleSwitchMode}>
-            <ListItemIcon>
-              {mode === 'admin' ? <ProfileIcon fontSize="small" /> : <AdminIcon fontSize="small" />}
-            </ListItemIcon>
-            Switch to {mode === 'admin' ? 'User' : 'Admin'} Mode
-          </MenuItem>
-          <Divider />
-          <MenuItem onClick={handleClose}>
+          <MenuItem onClick={handleLogout}>
             <ListItemIcon>
               <LogoutIcon fontSize="small" />
             </ListItemIcon>
