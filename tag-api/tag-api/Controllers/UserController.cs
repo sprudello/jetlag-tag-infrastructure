@@ -30,6 +30,26 @@ namespace tag_api.Controllers
 
             return Ok(response);
         }
+        [HttpGet("/user/{id}")]
+        public async Task<ActionResult<UserDataDTO>> GetUserById(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            var userDto = new UserDataDTO
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Currency = user.Currency,
+                IsAdmin = user.IsAdmin
+            };
+
+            return Ok(userDto);
+        }
+
         [HttpPut("/editUser/{id}")]
         // [Authorize(Roles = "Admin")] // Uncomment if using JWT and role-based authorization
         public async Task<IActionResult> EditUser(int id, [FromBody] EditUserDTO editDto)
