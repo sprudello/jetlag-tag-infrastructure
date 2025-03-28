@@ -16,6 +16,10 @@ import Items from './components/Items'
 import Profile from './components/Profile'
 import AdminProfile from './components/admin/AdminProfile'
 import UsersManager from './components/admin/UsersManager'
+import ChallengeManager from './components/admin/ChallengeManager'
+import ShopItemManager from './components/admin/ShopItemManager'
+import TransportationManager from './components/admin/TransportationManager'
+import PenaltyManager from './components/admin/PenaltyManager'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 
 function AppContent() {
@@ -31,7 +35,24 @@ function AppContent() {
     
     // If authenticated, check if admin
     if (currentUser?.isAdmin) {
-      return <AdminDashboard />;
+      switch(currentPage) {
+        case 'Dashboard':
+          return <AdminDashboard />;
+        case 'Challenges':
+          return <ChallengeManager />;
+        case 'Shop Items':
+          return <ShopItemManager />;
+        case 'Transportation':
+          return <TransportationManager />;
+        case 'Penalty Time':
+          return <PenaltyManager />;
+        case 'Users':
+          return <UsersManager />;
+        case 'AdminProfile':
+          return <AdminProfile />;
+        default:
+          return <AdminDashboard />;
+      }
     }
     
     // Regular user mode

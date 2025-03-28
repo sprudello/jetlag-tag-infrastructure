@@ -21,7 +21,9 @@ import {
   Person as ProfileIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  ShoppingCart as ShopIcon,
+  Timer as TimerIcon
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import { useAuth } from '../contexts/AuthContext';
@@ -64,6 +66,10 @@ function Header({ onPageChange }) {
   // Different navigation items based on user role
   const adminNavItems = [
     { name: 'Dashboard', icon: <DashboardIcon fontSize="small" /> },
+    { name: 'Challenges', icon: <ChallengesIcon fontSize="small" /> },
+    { name: 'Shop Items', icon: <ShopIcon fontSize="small" /> },
+    { name: 'Transportation', icon: <TransportIcon fontSize="small" /> },
+    { name: 'Penalty Time', icon: <TimerIcon fontSize="small" /> },
     { name: 'Users', icon: <ProfileIcon fontSize="small" /> },
     { name: 'Profile', icon: <ProfileIcon fontSize="small" />, onClick: handleProfileClick }
   ];
