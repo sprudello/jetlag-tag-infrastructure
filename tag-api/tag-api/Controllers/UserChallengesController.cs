@@ -57,7 +57,7 @@ namespace tag_api.Controllers
         }
 
         // POST: api/UserChallenges/success
-        [HttpPost("success")]
+        [HttpPost("/success")]
         public async Task<IActionResult> CompleteChallengeSuccess([FromBody] CompleteChallengeRequestDTO request)
         {
             var userChallenge = await _context.UserChallenges
@@ -87,7 +87,7 @@ namespace tag_api.Controllers
         }
 
         // POST: api/UserChallenges/fail
-        [HttpPost("fail")]
+        [HttpPost("/fail")]
         public async Task<IActionResult> CompleteChallengeFail([FromBody] FailChallengeRequestDTO request)
         {
             var userChallenge = await _context.UserChallenges.FirstOrDefaultAsync(uc => uc.Id == request.UserChallengeId);
