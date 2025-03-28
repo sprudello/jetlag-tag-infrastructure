@@ -1,0 +1,48 @@
+@use '../variables' as vars;
+@use '../mixins' as mix;
+
+.transportations-container {
+  padding: vars.$spacing-md;
+  
+  .page-header {
+    display: flex;
+    align-items: center;
+    padding: vars.$spacing-md;
+  }
+  
+  .transportation-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-icon {
+      display: flex;
+      justify-content: center;
+      margin-bottom: vars.$spacing-md;
+    }
+    
+    .card-description {
+      min-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+    
+    .card-details {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .MuiCardActions-root {
+      margin-top: auto;
+    }
+  }
+}

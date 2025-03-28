@@ -1,0 +1,61 @@
+@use '../variables' as vars;
+@use '../mixins' as mix;
+
+.profile-container {
+  padding: vars.$spacing-md;
+  
+  .profile-paper {
+    padding: vars.$spacing-lg;
+  }
+  
+  .profile-header {
+    display: flex;
+    align-items: center;
+    
+    @include mix.mobile {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .profile-info {
+      margin-left: vars.$spacing-lg;
+      
+      @include mix.mobile {
+        margin-left: 0;
+        margin-top: vars.$spacing-md;
+      }
+    }
+    
+    .currency-display {
+      display: flex;
+      align-items: center;
+      margin-top: vars.$spacing-md;
+      
+      @include mix.mobile {
+        justify-content: center;
+      }
+      
+      svg {
+        margin-right: vars.$spacing-sm;
+        color: gold;
+      }
+    }
+  }
+  
+  .profile-stats {
+    text-align: center;
+    
+    .stat-card {
+      height: 100%;
+      padding: vars.$spacing-md;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      
+      h4 {
+        margin: vars.$spacing-md 0;
+        font-size: 2.5rem;
+      }
+    }
+  }
+}

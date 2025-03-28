@@ -16,3 +16,8 @@
 
 // Load page-specific styles
 @use 'pages/home' as home;
+@use 'pages/user_dashboard' as user_dashboard;
+@use 'pages/profile' as profile;
+@use 'pages/challenges' as challenges;
+@use 'pages/transportations' as transportations;
+@use 'pages/items' as items;

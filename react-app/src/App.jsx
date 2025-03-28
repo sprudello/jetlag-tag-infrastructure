@@ -9,6 +9,11 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import AdminDashboard from './components/admin/AdminDashboard'
 import AuthPage from './components/auth/AuthPage'
+import Home from './components/Home'
+import Challenges from './components/Challenges'
+import Transportations from './components/Transportations'
+import Items from './components/Items'
+import Profile from './components/Profile'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 
 function AppContent() {
@@ -30,9 +35,17 @@ function AppContent() {
     // Regular user mode
     switch(currentPage) {
       case 'Home':
+        return <Home />;
       case 'Challenges':
+        return <Challenges />;
+      case 'Transportations':
+        return <Transportations />;
+      case 'Items':
+        return <Items />;
+      case 'Profile':
+        return <Profile />;
       default:
-        return <ChallengeGame />;
+        return <Home />;
     }
   };
   

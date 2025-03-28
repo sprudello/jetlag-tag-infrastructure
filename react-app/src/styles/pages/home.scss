@@ -1,0 +1,45 @@
+@use '../variables' as vars;
+@use '../mixins' as mix;
+
+.home-container {
+  padding: vars.$spacing-md;
+  
+  .welcome-section {
+    text-align: center;
+    margin-bottom: vars.$spacing-lg;
+  }
+  
+  .home-section {
+    margin-bottom: vars.$spacing-lg;
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+    }
+  }
+  
+  .item-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-description {
+      min-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+    
+    .MuiCardActions-root {
+      margin-top: auto;
+    }
+  }
+}

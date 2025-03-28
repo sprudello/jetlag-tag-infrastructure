@@ -1,0 +1,42 @@
+@use '../variables' as vars;
+@use '../mixins' as mix;
+
+.challenges-container {
+  padding: vars.$spacing-md;
+  
+  .page-header {
+    display: flex;
+    align-items: center;
+    padding: vars.$spacing-md;
+  }
+  
+  .challenge-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-description {
+      min-height: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+    }
+    
+    .card-details {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .MuiCardActions-root {
+      margin-top: auto;
+    }
+  }
+}

@@ -1,3 +1,5 @@
+import { decodeToken } from '../utils/jwtUtils';
+
 // Base API URL - should be configured from environment variables in a real app
 const API_URL = 'http://localhost:5296';
 
@@ -10,7 +12,7 @@ const authService = {
    * @param {Object} credentials - User credentials
    * @param {string} credentials.username - Username
    * @param {string} credentials.password - Password
-   * @returns {Promise<Object>} - User data with token and isAdmin flag
+   * @returns {Promise<Object>} - User data with token and user info
    */
   login: async (credentials) => {
     try {
@@ -28,14 +30,48 @@ const authService = {
       }
 
       const data = await response.json();
+      const token = data.token;
       
       // Store token in localStorage
-      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('authToken', token);
       
-      return {
-        token: data.token,
-        isAdmin: data.isAdmin
-      };
+      // Decode token to get user information
+      const decodedToken = decodeToken(token);
+      
+      // Extract user info from token
+      const userId = decodedToken?.UserId || null;
+      const username = decodedToken?.unique_name || credentials.username;
+      const role = decodedToken?.role || '';
+      const isAdmin = role === 'Admin';
+      
+      // Store user info in localStorage
+      const userInfo = { userId, username, isAdmin };
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      
+      // Fetch user data including currency
+      let userData = { token, userId, username, isAdmin };
+      
+      if (userId) {
+        try {
+          const userResponse = await fetch(`${API_URL}/user/${userId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (userResponse.ok) {
+            const userDetails = await userResponse.json();
+            userData = { 
+              ...userData, 
+              currency: userDetails.currency 
+            };
+          }
+        } catch (err) {
+          console.error('Error fetching user details:', err);
+        }
+      }
+      
+      return userData;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -72,10 +108,11 @@ const authService = {
   },
 
   /**
-   * Logout user by removing token
+   * Logout user by removing token and user info
    */
   logout: () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userInfo');
   },
 
   /**

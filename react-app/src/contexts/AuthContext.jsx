@@ -1,6 +1,9 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import authService from '../services/authService';
 
+// Base API URL - should be configured from environment variables in a real app
+const API_URL = 'http://localhost:5296';
+
 // Create context
 const AuthContext = createContext(null);
 
@@ -20,8 +23,50 @@ export const AuthProvider = ({ children }) => {
       const token = authService.getToken();
       if (token) {
         setIsAuthenticated(true);
-        // In a real app, you would validate the token and get user data
-        // For now, we'll just set authenticated to true
+        
+        // Get stored user info
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+          try {
+            const userInfo = JSON.parse(userInfoStr);
+            
+            // Fetch user data including currency
+            const fetchUserData = async () => {
+              try {
+                const response = await fetch(`${API_URL}/user/${userInfo.userId}`, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                
+                if (response.ok) {
+                  const userData = await response.json();
+                  setCurrentUser({
+                    ...userInfo,
+                    token,
+                    currency: userData.currency
+                  });
+                } else {
+                  // If we can't fetch user data, still use the stored info
+                  setCurrentUser({
+                    ...userInfo,
+                    token
+                  });
+                }
+              } catch (err) {
+                console.error('Error fetching user data:', err);
+                setCurrentUser({
+                  ...userInfo,
+                  token
+                });
+              }
+            };
+            
+            fetchUserData();
+          } catch (err) {
+            console.error('Error parsing user info:', err);
+          }
+        }
       }
       setLoading(false);
     };
@@ -32,14 +77,10 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (credentials) => {
     try {
-      const data = await authService.login(credentials);
+      const userData = await authService.login(credentials);
       setIsAuthenticated(true);
-      setCurrentUser({
-        username: credentials.username,
-        token: data.token,
-        isAdmin: data.isAdmin
-      });
-      return data;
+      setCurrentUser(userData);
+      return userData;
     } catch (error) {
       throw error;
     }
