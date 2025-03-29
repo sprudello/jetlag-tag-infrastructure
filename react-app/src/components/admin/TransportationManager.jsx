@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
   Typography,
+  CircularProgress,
   Button,
   Paper,
   Table,
@@ -37,14 +39,54 @@ import {
 } from '@mui/icons-material';
 
 const TransportationManager = () => {
-  const [transportations, setTransportations] = useState([
-    { id: 1, name: 'City Bus', type: 'bus', baseTime: 1, baseCost: 10, icon: 'bus', active: true },
-    { id: 2, name: 'Express Train', type: 'train', baseTime: 1, baseCost: 15, icon: 'train', active: true },
-    { id: 3, name: 'Bike Rental', type: 'bike', baseTime: 1, baseCost: 1, icon: 'bike', active: true }
-  ]);
+  const [transportations, setTransportations] = useState([]);
   
   const [openDialog, setOpenDialog] = useState(false);
   const [editingTransport, setEditingTransport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { currentUser } = useAuth();
+  
+  const API_URL = 'http://localhost:5296';
+  
+  useEffect(() => {
+    const fetchTransportations = async () => {
+      try {
+        const response = await fetch(`${API_URL}/allTransportationTypes`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser?.token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const formattedData = data.map(transport => ({
+            id: transport.id,
+            name: transport.name,
+            type: transport.name.toLowerCase().includes('bus') ? 'bus' : 
+                  transport.name.toLowerCase().includes('train') ? 'train' : 
+                  transport.name.toLowerCase().includes('bike') ? 'bike' : 'bus',
+            baseTime: 1,
+            baseCost: transport.pricePerMinute,
+            icon: transport.name.toLowerCase().includes('bus') ? 'bus' : 
+                  transport.name.toLowerCase().includes('train') ? 'train' : 
+                  transport.name.toLowerCase().includes('bike') ? 'bike' : 'bus',
+            active: transport.isActive
+          }));
+          setTransportations(formattedData);
+        } else {
+          setError('Failed to load transportations');
+        }
+      } catch (err) {
+        setError('Error connecting to server');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransportations();
+  }, [currentUser]);
+  
   const [formData, setFormData] = useState({
     name: '',
     type: 'bus',
@@ -151,8 +193,17 @@ const TransportationManager = () => {
         </Button>
       </Box>
       
-      <TableContainer component={Paper}>
-        <Table>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Typography color="error" sx={{ p: 3 }}>
+          {error}
+        </Typography>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
@@ -195,8 +246,9 @@ const TransportationManager = () => {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
-      </TableContainer>
+          </Table>
+        </TableContainer>
+      )}
       
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>{editingTransport ? 'Edit Transportation' : 'Add New Transportation'}</DialogTitle>

@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
   Typography,
+  CircularProgress,
   Button,
   Paper,
   Table,
@@ -32,10 +34,7 @@ import {
 } from '@mui/icons-material';
 
 const ChallengeManager = () => {
-  const [challenges, setChallenges] = useState([
-    { id: 1, title: 'Verwirrter', description: 'Dreh dich zehn mal im Kreis und zeige in eine zufällige richtung. Laufe nun einen Kilometer in diese Richung.', reward: 1000, active: true },
-    { id: 2, title: 'Lokaler Gourmet Chef', description: 'Finde eine lokale Spezialität und konsumiere diese.', reward: 200, active: true }
-  ]);
+  const [challenges, setChallenges] = useState([]);
   
   const [openDialog, setOpenDialog] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState(null);
@@ -45,6 +44,44 @@ const ChallengeManager = () => {
     reward: 0,
     active: true
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { currentUser } = useAuth();
+  
+  const API_URL = 'http://localhost:5296';
+  
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/allChallenges`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser?.token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const formattedData = data.map(challenge => ({
+            id: challenge.id,
+            title: challenge.title,
+            description: challenge.description,
+            reward: challenge.reward,
+            active: challenge.isActive
+          }));
+          setChallenges(formattedData);
+        } else {
+          setError('Failed to load challenges');
+        }
+      } catch (err) {
+        setError('Error connecting to server');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChallenges();
+  }, [currentUser]);
   
   const handleOpenDialog = (challenge = null) => {
     if (challenge) {
@@ -120,8 +157,17 @@ const ChallengeManager = () => {
         </Button>
       </Box>
       
-      <TableContainer component={Paper}>
-        <Table>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Typography color="error" sx={{ p: 3 }}>
+          {error}
+        </Typography>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
@@ -160,8 +206,9 @@ const ChallengeManager = () => {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
-      </TableContainer>
+          </Table>
+        </TableContainer>
+      )}
       
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>{editingChallenge ? 'Edit Challenge' : 'Add New Challenge'}</DialogTitle>

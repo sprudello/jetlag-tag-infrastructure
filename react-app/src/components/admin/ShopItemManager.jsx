@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
   Typography,
+  CircularProgress,
   Button,
   Paper,
   Table,
@@ -34,17 +36,50 @@ import {
 } from '@mui/icons-material';
 
 const ShopItemManager = () => {
-  const [shopItems, setShopItems] = useState([
-    { id: 1, name: 'Coin Doubler', description: 'Double your challenge rewards', cost: 200, multiplier: 2, active: true },
-    { id: 2, name: 'Triple Boost', description: 'Triple your challenge rewards', cost: 500, multiplier: 3, active: true },
-    { id: 3, name: 'Quadruple Power', description: 'Quadruple your challenge rewards', cost: 800, multiplier: 4, active: true },
-    { id: 4, name: 'Challenge Veto', description: 'Skip a challenge without penalty', cost: 300, multiplier: null, active: true }
-  ]);
+  const [shopItems, setShopItems] = useState([]);
   
   const [openDialog, setOpenDialog] = useState(false);
   const [openTypeDialog, setOpenTypeDialog] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [selectedItemType, setSelectedItemType] = useState(null); // 'multiplier', 'veto', 'custom'
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { currentUser } = useAuth();
+  
+  const API_URL = 'http://localhost:5296';
+  
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const response = await fetch(`${API_URL}/AllItems`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser?.token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const formattedData = data.map(item => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            cost: item.price,
+            multiplier: null, // API doesn't provide multiplier info
+            active: item.isActive
+          }));
+          setShopItems(formattedData);
+        } else {
+          setError('Failed to load shop items');
+        }
+      } catch (err) {
+        setError('Error connecting to server');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, [currentUser]);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -219,7 +254,17 @@ const ShopItemManager = () => {
         </Button>
       </Box>
       
-      {renderShopItemsTable()}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Typography color="error" sx={{ p: 3 }}>
+          {error}
+        </Typography>
+      ) : (
+        renderShopItemsTable()
+      )}
       
       <Dialog open={openTypeDialog} onClose={handleCloseTypeDialog} maxWidth="sm" fullWidth>
         <DialogTitle>Select Item Type</DialogTitle>

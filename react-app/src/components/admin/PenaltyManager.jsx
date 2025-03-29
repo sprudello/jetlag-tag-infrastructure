@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
   Typography,
+  CircularProgress,
   Button,
   Paper,
   Table,
@@ -34,12 +36,34 @@ import {
 } from '@mui/icons-material';
 
 const PenaltyManager = () => {
-  const [penalties, setPenalties] = useState([
-    { id: 1, name: 'Standard Delay', description: 'Standard time penalty', minutes: 30, active: true }
-  ]);
+  const [penalties, setPenalties] = useState([]);
   
   const [openDialog, setOpenDialog] = useState(false);
   const [editingPenalty, setEditingPenalty] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { currentUser } = useAuth();
+  
+  const API_URL = 'http://localhost:5296';
+  
+  useEffect(() => {
+    const fetchPenalty = async () => {
+      try {
+        // Assuming there's an endpoint to get the penalty configuration
+        // If not, we'll just use a default value
+        setPenalties([
+          { id: 1, name: 'Standard Delay', description: 'Standard time penalty', minutes: 30, active: true }
+        ]);
+      } catch (err) {
+        setError('Error connecting to server');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPenalty();
+  }, [currentUser]);
+  
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -128,8 +152,17 @@ const PenaltyManager = () => {
         </Button>
       </Box>
       
-      <TableContainer component={Paper}>
-        <Table>
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Typography color="error" sx={{ p: 3 }}>
+          {error}
+        </Typography>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table>
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
@@ -168,8 +201,9 @@ const PenaltyManager = () => {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
-      </TableContainer>
+          </Table>
+        </TableContainer>
+      )}
       
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>{editingPenalty ? 'Edit Penalty' : 'Add New Penalty'}</DialogTitle>

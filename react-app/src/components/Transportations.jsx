@@ -26,7 +26,7 @@ const Transportations = () => {
   const [transportations, setTransportations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  
   const API_URL = 'http://localhost:5296';
 
   useEffect(() => {
