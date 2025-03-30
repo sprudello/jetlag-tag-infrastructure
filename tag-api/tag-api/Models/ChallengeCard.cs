@@ -1,4 +1,6 @@
-﻿namespace tag_api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace tag_api.Models
 {
     public class ChallengeCard
     {
@@ -9,6 +11,7 @@
         public bool IsActive { get; set; }
 
         // Inverse navigation property
+        [JsonIgnore]
         public ICollection<UserChallenge> UserChallenges { get; set; } = new List<UserChallenge>();
     }
 }

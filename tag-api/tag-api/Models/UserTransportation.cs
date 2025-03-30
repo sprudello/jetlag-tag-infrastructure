@@ -1,4 +1,6 @@
-﻿namespace tag_api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace tag_api.Models
 {
     public class UserTransportation
     {
@@ -11,6 +13,7 @@
         public int TotalCost { get; set; }
 
         //Relationships
+        [JsonIgnore]
         public User User { get; set; }
         public TransportationType TransportationType { get; set; }
     }
