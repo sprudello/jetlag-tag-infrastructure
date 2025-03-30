@@ -1,8 +1,9 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import authService from '../services/authService';
+import API_CONFIG from '../config/apiConfig';
 
-// Base API URL - should be configured from environment variables in a real app
-const API_URL = 'http://localhost:5296';
+// Base API URL
+const API_URL = API_CONFIG.BASE_URL;
 
 // Create context
 const AuthContext = createContext(null);

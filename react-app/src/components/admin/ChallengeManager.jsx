@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import challengeService from '../../services/challengeService';
 import {
   Box,
   Typography,
@@ -23,7 +24,9 @@ import {
   Select,
   MenuItem,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -46,41 +49,32 @@ const ChallengeManager = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const { currentUser } = useAuth();
-  
-  const API_URL = 'http://localhost:5296';
   
   useEffect(() => {
     const fetchChallenges = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${API_URL}/allChallenges`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser?.token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          const formattedData = data.map(challenge => ({
-            id: challenge.id,
-            title: challenge.title,
-            description: challenge.description,
-            reward: challenge.reward,
-            active: challenge.isActive
-          }));
-          setChallenges(formattedData);
-        } else {
-          setError('Failed to load challenges');
-        }
+        const data = await challengeService.getAllChallenges(currentUser?.token);
+        const formattedData = data.map(challenge => ({
+          id: challenge.id,
+          title: challenge.title,
+          description: challenge.description,
+          reward: challenge.reward,
+          active: challenge.isActive
+        }));
+        setChallenges(formattedData);
       } catch (err) {
-        setError('Error connecting to server');
+        setError('Error loading challenges: ' + err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchChallenges();
+    if (currentUser?.token) {
+      fetchChallenges();
+    }
   }, [currentUser]);
   
   const handleOpenDialog = (challenge = null) => {
@@ -116,31 +110,117 @@ const ChallengeManager = () => {
     });
   };
   
-  const handleSubmit = () => {
-    if (editingChallenge) {
-      // Update existing challenge
-      setChallenges(challenges.map(challenge => 
-        challenge.id === editingChallenge.id ? { ...challenge, ...formData } : challenge
-      ));
-    } else {
-      // Add new challenge
-      const newChallenge = {
-        id: challenges.length > 0 ? Math.max(...challenges.map(c => c.id)) + 1 : 1,
-        ...formData
-      };
-      setChallenges([...challenges, newChallenge]);
+  const handleSubmit = async () => {
+    try {
+      if (editingChallenge) {
+        // Update existing challenge
+        const updateData = {
+          title: formData.title,
+          description: formData.description,
+          reward: parseInt(formData.reward),
+          isActive: formData.active
+        };
+        
+        await challengeService.updateChallenge(editingChallenge.id, updateData, currentUser?.token);
+        
+        setChallenges(challenges.map(challenge => 
+          challenge.id === editingChallenge.id ? { ...challenge, ...formData } : challenge
+        ));
+        
+        setNotification({
+          open: true,
+          message: 'Challenge updated successfully',
+          severity: 'success'
+        });
+      } else {
+        // Add new challenge
+        const createData = {
+          title: formData.title,
+          description: formData.description,
+          reward: parseInt(formData.reward),
+          isActive: formData.active
+        };
+        
+        const result = await challengeService.createChallenge(createData, currentUser?.token);
+        
+        const newChallenge = {
+          id: result.id,
+          title: result.title,
+          description: result.description,
+          reward: result.reward,
+          active: result.isActive
+        };
+        
+        setChallenges([...challenges, newChallenge]);
+        
+        setNotification({
+          open: true,
+          message: 'Challenge created successfully',
+          severity: 'success'
+        });
+      }
+      handleCloseDialog();
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error: ${err.message}`,
+        severity: 'error'
+      });
     }
-    handleCloseDialog();
   };
   
-  const handleDelete = (id) => {
-    setChallenges(challenges.filter(challenge => challenge.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await challengeService.deleteChallenge(id, currentUser?.token);
+      setChallenges(challenges.filter(challenge => challenge.id !== id));
+      setNotification({
+        open: true,
+        message: 'Challenge deleted successfully',
+        severity: 'success'
+      });
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error deleting challenge: ${err.message}`,
+        severity: 'error'
+      });
+    }
   };
   
-  const handleToggleActive = (id) => {
-    setChallenges(challenges.map(challenge => 
-      challenge.id === id ? { ...challenge, active: !challenge.active } : challenge
-    ));
+  const handleToggleActive = async (id) => {
+    try {
+      const challenge = challenges.find(c => c.id === id);
+      if (!challenge) return;
+      
+      const updateData = {
+        title: challenge.title,
+        description: challenge.description,
+        reward: challenge.reward,
+        isActive: !challenge.active
+      };
+      
+      await challengeService.updateChallenge(id, updateData, currentUser?.token);
+      
+      setChallenges(challenges.map(challenge => 
+        challenge.id === id ? { ...challenge, active: !challenge.active } : challenge
+      ));
+      
+      setNotification({
+        open: true,
+        message: `Challenge ${!challenge.active ? 'activated' : 'deactivated'} successfully`,
+        severity: 'success'
+      });
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error updating challenge: ${err.message}`,
+        severity: 'error'
+      });
+    }
+  };
+  
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
   
   return (
@@ -220,6 +300,9 @@ const ChallengeManager = () => {
               fullWidth
               value={formData.title}
               onChange={handleInputChange}
+              required
+              error={!formData.title}
+              helperText={!formData.title ? "Title is required" : ""}
             />
             <TextField
               name="description"
@@ -229,6 +312,9 @@ const ChallengeManager = () => {
               rows={3}
               value={formData.description}
               onChange={handleInputChange}
+              required
+              error={!formData.description}
+              helperText={!formData.description ? "Description is required" : ""}
             />
             <TextField
               name="reward"
@@ -237,6 +323,9 @@ const ChallengeManager = () => {
               fullWidth
               value={formData.reward}
               onChange={handleInputChange}
+              required
+              error={formData.reward <= 0}
+              helperText={formData.reward <= 0 ? "Reward must be greater than 0" : ""}
             />
             <FormControlLabel
               control={
@@ -253,11 +342,31 @@ const ChallengeManager = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            color="primary"
+            disabled={!formData.title || !formData.description || formData.reward <= 0}
+          >
             {editingChallenge ? 'Update' : 'Add'}
           </Button>
         </DialogActions>
       </Dialog>
+      
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

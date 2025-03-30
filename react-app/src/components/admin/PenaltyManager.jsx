@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import penaltyService from '../../services/penaltyService';
 import {
   Box,
   Typography,
@@ -24,7 +25,9 @@ import {
   MenuItem,
   Switch,
   FormControlLabel,
-  Slider
+  Slider,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -42,20 +45,19 @@ const PenaltyManager = () => {
   const [editingPenalty, setEditingPenalty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const { currentUser } = useAuth();
   
-  const API_URL = 'http://localhost:5296';
-  
   useEffect(() => {
+    // Since there's no specific endpoint to get penalties, we'll use a default value
+    // In a real app, you would fetch this from the API
     const fetchPenalty = async () => {
       try {
-        // Assuming there's an endpoint to get the penalty configuration
-        // If not, we'll just use a default value
         setPenalties([
           { id: 1, name: 'Standard Delay', description: 'Standard time penalty', minutes: 30, active: true }
         ]);
       } catch (err) {
-        setError('Error connecting to server');
+        setError('Error loading penalty configuration');
       } finally {
         setLoading(false);
       }
@@ -111,45 +113,46 @@ const PenaltyManager = () => {
     });
   };
   
-  const handleSubmit = () => {
-    if (editingPenalty) {
-      // Update existing penalty
-      setPenalties(penalties.map(penalty => 
-        penalty.id === editingPenalty.id ? { ...penalty, ...formData } : penalty
-      ));
-    } else {
-      // Add new penalty
-      const newPenalty = {
-        id: penalties.length > 0 ? Math.max(...penalties.map(p => p.id)) + 1 : 1,
-        ...formData
-      };
-      setPenalties([...penalties, newPenalty]);
-    }
+  const handleSubmit = async () => {
+    // Functionality disabled as the standard penalty cannot be changed
+    setNotification({
+      open: true,
+      message: 'Standard penalty cannot be modified',
+      severity: 'info'
+    });
     handleCloseDialog();
   };
   
+  // Penalty actions are disabled as the standard 30-minute penalty cannot be changed
   const handleDelete = (id) => {
-    setPenalties(penalties.filter(penalty => penalty.id !== id));
+    // Functionality disabled
+    setNotification({
+      open: true,
+      message: 'Standard penalty cannot be deleted',
+      severity: 'info'
+    });
   };
   
-  const handleToggleActive = (id) => {
-    setPenalties(penalties.map(penalty => 
-      penalty.id === id ? { ...penalty, active: !penalty.active } : penalty
-    ));
+  const handleToggleActive = async (id) => {
+    // Functionality disabled
+    setNotification({
+      open: true,
+      message: 'Standard penalty status cannot be changed',
+      severity: 'info'
+    });
+  };
+  
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
   
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5">Penalty Time Management</Typography>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-        >
-          Add Penalty
-        </Button>
+        <Typography variant="body2" color="text.secondary">
+          Standard penalty is fixed at 30 minutes
+        </Typography>
       </Box>
       
       {loading ? (
@@ -188,15 +191,9 @@ const PenaltyManager = () => {
                   )}
                 </TableCell>
                 <TableCell>
-                  <IconButton onClick={() => handleOpenDialog(penalty)} color="primary">
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => handleToggleActive(penalty.id)} color={penalty.active ? "success" : "default"}>
-                    {penalty.active ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(penalty.id)} color="error">
-                    <DeleteIcon />
-                  </IconButton>
+                  <Typography variant="body2" color="text.secondary">
+                    Standard penalty cannot be modified
+                  </Typography>
                 </TableCell>
               </TableRow>
             ))}
@@ -215,6 +212,9 @@ const PenaltyManager = () => {
               fullWidth
               value={formData.name}
               onChange={handleInputChange}
+              required
+              error={!formData.name}
+              helperText={!formData.name ? "Name is required" : ""}
             />
             <TextField
               name="description"
@@ -224,6 +224,9 @@ const PenaltyManager = () => {
               rows={2}
               value={formData.description}
               onChange={handleInputChange}
+              required
+              error={!formData.description}
+              helperText={!formData.description ? "Description is required" : ""}
             />
             <TextField
               name="minutes"
@@ -232,7 +235,16 @@ const PenaltyManager = () => {
               fullWidth
               value={30}
               disabled
-              helperText="Standard penalty time is fixed at 30 minutes"
+              sx={{ 
+                "& .MuiInputBase-input.Mui-disabled": { 
+                  WebkitTextFillColor: "rgba(255, 255, 255, 0.3)",
+                  bgcolor: "rgba(0, 0, 0, 0.3)" 
+                },
+                "& .Mui-disabled": {
+                  opacity: 0.7
+                }
+              }}
+              helperText="Standard penalty time is fixed at 30 minutes and cannot be changed"
             />
             <FormControlLabel
               control={
@@ -249,11 +261,30 @@ const PenaltyManager = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
-            {editingPenalty ? 'Update' : 'Add'}
+          <Button 
+            onClick={handleCloseDialog} 
+            variant="contained" 
+            color="primary"
+          >
+            Close
           </Button>
         </DialogActions>
       </Dialog>
+      
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

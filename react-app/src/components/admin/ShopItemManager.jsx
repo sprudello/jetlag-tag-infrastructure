@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import itemService from '../../services/itemService';
 import {
   Box,
   Typography,
@@ -24,7 +25,9 @@ import {
   MenuItem,
   Switch,
   FormControlLabel,
-  Slider
+  Slider,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -44,41 +47,32 @@ const ShopItemManager = () => {
   const [selectedItemType, setSelectedItemType] = useState(null); // 'multiplier', 'veto', 'custom'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const { currentUser } = useAuth();
-  
-  const API_URL = 'http://localhost:5296';
   
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const response = await fetch(`${API_URL}/AllItems`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser?.token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          const formattedData = data.map(item => ({
-            id: item.id,
-            name: item.name,
-            description: item.description,
-            cost: item.price,
-            multiplier: null, // API doesn't provide multiplier info
-            active: item.isActive
-          }));
-          setShopItems(formattedData);
-        } else {
-          setError('Failed to load shop items');
-        }
+        const data = await itemService.getAllItems(currentUser?.token);
+        const formattedData = data.map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          cost: item.price,
+          multiplier: null, // API doesn't provide multiplier info
+          active: item.isActive
+        }));
+        setShopItems(formattedData);
       } catch (err) {
-        setError('Error connecting to server');
+        setError('Error loading items: ' + err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchItems();
+    if (currentUser?.token) {
+      fetchItems();
+    }
   }, [currentUser]);
   const [formData, setFormData] = useState({
     name: '',
@@ -166,31 +160,118 @@ const ShopItemManager = () => {
     });
   };
   
-  const handleSubmit = () => {
-    if (editingItem) {
-      // Update existing item
-      setShopItems(shopItems.map(item => 
-        item.id === editingItem.id ? { ...item, ...formData } : item
-      ));
-    } else {
-      // Add new item
-      const newItem = {
-        id: shopItems.length > 0 ? Math.max(...shopItems.map(i => i.id)) + 1 : 1,
-        ...formData
-      };
-      setShopItems([...shopItems, newItem]);
+  const handleSubmit = async () => {
+    try {
+      if (editingItem) {
+        // Update existing item
+        const updateData = {
+          name: formData.name,
+          description: formData.description,
+          price: parseInt(formData.cost),
+          isActive: formData.active
+        };
+        
+        await itemService.updateItem(editingItem.id, updateData, currentUser?.token);
+        
+        setShopItems(shopItems.map(item => 
+          item.id === editingItem.id ? { ...item, ...formData } : item
+        ));
+        
+        setNotification({
+          open: true,
+          message: 'Item updated successfully',
+          severity: 'success'
+        });
+      } else {
+        // Add new item
+        const createData = {
+          name: formData.name,
+          description: formData.description,
+          price: parseInt(formData.cost),
+          isActive: formData.active
+        };
+        
+        const result = await itemService.createItem(createData, currentUser?.token);
+        
+        const newItem = {
+          id: result.id,
+          name: result.name,
+          description: result.description,
+          cost: result.price,
+          multiplier: formData.multiplier,
+          active: result.isActive
+        };
+        
+        setShopItems([...shopItems, newItem]);
+        
+        setNotification({
+          open: true,
+          message: 'Item created successfully',
+          severity: 'success'
+        });
+      }
+      handleCloseDialog();
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error: ${err.message}`,
+        severity: 'error'
+      });
     }
-    handleCloseDialog();
   };
   
-  const handleDelete = (id) => {
-    setShopItems(shopItems.filter(item => item.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await itemService.deleteItem(id, currentUser?.token);
+      setShopItems(shopItems.filter(item => item.id !== id));
+      setNotification({
+        open: true,
+        message: 'Item deleted successfully',
+        severity: 'success'
+      });
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error deleting item: ${err.message}`,
+        severity: 'error'
+      });
+    }
   };
   
-  const handleToggleActive = (id) => {
-    setShopItems(shopItems.map(item => 
-      item.id === id ? { ...item, active: !item.active } : item
-    ));
+  const handleToggleActive = async (id) => {
+    try {
+      const item = shopItems.find(i => i.id === id);
+      if (!item) return;
+      
+      const updateData = {
+        name: item.name,
+        description: item.description,
+        price: item.cost,
+        isActive: !item.active
+      };
+      
+      await itemService.updateItem(id, updateData, currentUser?.token);
+      
+      setShopItems(shopItems.map(item => 
+        item.id === id ? { ...item, active: !item.active } : item
+      ));
+      
+      setNotification({
+        open: true,
+        message: `Item ${!item.active ? 'activated' : 'deactivated'} successfully`,
+        severity: 'success'
+      });
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error updating item: ${err.message}`,
+        severity: 'error'
+      });
+    }
+  };
+  
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
   
   const renderShopItemsTable = () => (
@@ -334,6 +415,9 @@ const ShopItemManager = () => {
               value={formData.name}
               onChange={handleInputChange}
               disabled={!editingItem && selectedItemType === 'veto'}
+              required
+              error={!formData.name}
+              helperText={!formData.name ? "Name is required" : ""}
             />
             <TextField
               name="description"
@@ -343,6 +427,9 @@ const ShopItemManager = () => {
               rows={2}
               value={formData.description}
               onChange={handleInputChange}
+              required
+              error={!formData.description}
+              helperText={!formData.description ? "Description is required" : ""}
             />
             <TextField
               name="cost"
@@ -351,6 +438,9 @@ const ShopItemManager = () => {
               fullWidth
               value={formData.cost}
               onChange={handleInputChange}
+              required
+              error={formData.cost <= 0}
+              helperText={formData.cost <= 0 ? "Cost must be greater than 0" : ""}
             />
             
             {(editingItem ? formData.multiplier !== null : selectedItemType === 'multiplier') && (
@@ -392,11 +482,31 @@ const ShopItemManager = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            color="primary"
+            disabled={!formData.name || !formData.description || formData.cost <= 0}
+          >
             {editingItem ? 'Update' : 'Add'}
           </Button>
         </DialogActions>
       </Dialog>
+      
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

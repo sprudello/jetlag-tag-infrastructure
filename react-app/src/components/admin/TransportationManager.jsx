@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import transportationService from '../../services/transportationService';
 import {
   Box,
   Typography,
@@ -23,7 +24,9 @@ import {
   Select,
   MenuItem,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -45,46 +48,38 @@ const TransportationManager = () => {
   const [editingTransport, setEditingTransport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const { currentUser } = useAuth();
-  
-  const API_URL = 'http://localhost:5296';
   
   useEffect(() => {
     const fetchTransportations = async () => {
       try {
-        const response = await fetch(`${API_URL}/allTransportationTypes`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser?.token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          const formattedData = data.map(transport => ({
-            id: transport.id,
-            name: transport.name,
-            type: transport.name.toLowerCase().includes('bus') ? 'bus' : 
-                  transport.name.toLowerCase().includes('train') ? 'train' : 
-                  transport.name.toLowerCase().includes('bike') ? 'bike' : 'bus',
-            baseTime: 1,
-            baseCost: transport.pricePerMinute,
-            icon: transport.name.toLowerCase().includes('bus') ? 'bus' : 
-                  transport.name.toLowerCase().includes('train') ? 'train' : 
-                  transport.name.toLowerCase().includes('bike') ? 'bike' : 'bus',
-            active: transport.isActive
-          }));
-          setTransportations(formattedData);
-        } else {
-          setError('Failed to load transportations');
-        }
+        const data = await transportationService.getAllTransportationTypes(currentUser?.token);
+        const formattedData = data.map(transport => ({
+          id: transport.id,
+          name: transport.name,
+          description: transport.description,
+          type: transport.name.toLowerCase().includes('bus') ? 'bus' : 
+                transport.name.toLowerCase().includes('train') ? 'train' : 
+                transport.name.toLowerCase().includes('bike') ? 'bike' : 'bus',
+          baseTime: 1,
+          baseCost: transport.pricePerMinute,
+          icon: transport.name.toLowerCase().includes('bus') ? 'bus' : 
+                transport.name.toLowerCase().includes('train') ? 'train' : 
+                transport.name.toLowerCase().includes('bike') ? 'bike' : 'bus',
+          active: transport.isActive
+        }));
+        setTransportations(formattedData);
       } catch (err) {
-        setError('Error connecting to server');
+        setError('Error loading transportations: ' + err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTransportations();
+    if (currentUser?.token) {
+      fetchTransportations();
+    }
   }, [currentUser]);
   
   const [formData, setFormData] = useState({
@@ -152,31 +147,128 @@ const TransportationManager = () => {
     }
   };
   
-  const handleSubmit = () => {
-    if (editingTransport) {
-      // Update existing transportation
-      setTransportations(transportations.map(transport => 
-        transport.id === editingTransport.id ? { ...transport, ...formData } : transport
-      ));
-    } else {
-      // Add new transportation
-      const newTransport = {
-        id: transportations.length > 0 ? Math.max(...transportations.map(t => t.id)) + 1 : 1,
-        ...formData
-      };
-      setTransportations([...transportations, newTransport]);
+  const handleSubmit = async () => {
+    try {
+      if (editingTransport) {
+        // Update existing transportation
+        const updateData = {
+          name: formData.name,
+          description: formData.description || `${formData.name} transportation service`,
+          pricePerMinute: parseInt(formData.baseCost),
+          isActive: formData.active
+        };
+        
+        await transportationService.updateTransportationType(editingTransport.id, updateData, currentUser?.token);
+        
+        setTransportations(transportations.map(transport => 
+          transport.id === editingTransport.id ? { 
+            ...transport, 
+            name: formData.name,
+            description: formData.description || `${formData.name} transportation service`,
+            type: formData.type,
+            baseCost: formData.baseCost,
+            icon: formData.icon,
+            active: formData.active
+          } : transport
+        ));
+        
+        setNotification({
+          open: true,
+          message: 'Transportation updated successfully',
+          severity: 'success'
+        });
+      } else {
+        // Add new transportation
+        const createData = {
+          name: formData.name,
+          description: formData.description || `${formData.name} transportation service`,
+          pricePerMinute: parseInt(formData.baseCost),
+          isActive: formData.active
+        };
+        
+        const result = await transportationService.createTransportationType(createData, currentUser?.token);
+        
+        const newTransport = {
+          id: result.id,
+          name: result.name,
+          description: result.description,
+          type: formData.type,
+          baseTime: 1,
+          baseCost: result.pricePerMinute,
+          icon: formData.icon,
+          active: result.isActive
+        };
+        
+        setTransportations([...transportations, newTransport]);
+        
+        setNotification({
+          open: true,
+          message: 'Transportation created successfully',
+          severity: 'success'
+        });
+      }
+      handleCloseDialog();
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error: ${err.message}`,
+        severity: 'error'
+      });
     }
-    handleCloseDialog();
   };
   
-  const handleDelete = (id) => {
-    setTransportations(transportations.filter(transport => transport.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await transportationService.deleteTransportationType(id, currentUser?.token);
+      setTransportations(transportations.filter(transport => transport.id !== id));
+      setNotification({
+        open: true,
+        message: 'Transportation deleted successfully',
+        severity: 'success'
+      });
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error deleting transportation: ${err.message}`,
+        severity: 'error'
+      });
+    }
   };
   
-  const handleToggleActive = (id) => {
-    setTransportations(transportations.map(transport => 
-      transport.id === id ? { ...transport, active: !transport.active } : transport
-    ));
+  const handleToggleActive = async (id) => {
+    try {
+      const transport = transportations.find(t => t.id === id);
+      if (!transport) return;
+      
+      const updateData = {
+        name: transport.name,
+        description: transport.description || `${transport.name} transportation service`,
+        pricePerMinute: transport.baseCost,
+        isActive: !transport.active
+      };
+      
+      await transportationService.updateTransportationType(id, updateData, currentUser?.token);
+      
+      setTransportations(transportations.map(transport => 
+        transport.id === id ? { ...transport, active: !transport.active } : transport
+      ));
+      
+      setNotification({
+        open: true,
+        message: `Transportation ${!transport.active ? 'activated' : 'deactivated'} successfully`,
+        severity: 'success'
+      });
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error updating transportation: ${err.message}`,
+        severity: 'error'
+      });
+    }
+  };
+  
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
   
   return (
@@ -260,20 +352,20 @@ const TransportationManager = () => {
               fullWidth
               value={formData.name}
               onChange={handleInputChange}
+              required
+              error={!formData.name}
+              helperText={!formData.name ? "Name is required" : ""}
             />
-            <FormControl fullWidth>
-              <InputLabel>Type</InputLabel>
-              <Select
-                name="type"
-                value={formData.type}
-                label="Type"
-                onChange={handleInputChange}
-              >
-                <MenuItem value="bus">Bus</MenuItem>
-                <MenuItem value="train">Train</MenuItem>
-                <MenuItem value="bike">Bike</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              name="description"
+              label="Description"
+              fullWidth
+              multiline
+              rows={2}
+              value={formData.description || `${formData.name || ''} transportation service`}
+              onChange={handleInputChange}
+            />
+            {/* Type selection removed as requested */}
             <TextField
               name="baseTime"
               label="Base Time (minutes)"
@@ -281,6 +373,12 @@ const TransportationManager = () => {
               fullWidth
               value={1}
               disabled
+              sx={{ 
+                "& .MuiInputBase-input.Mui-disabled": { 
+                  WebkitTextFillColor: "rgba(255, 255, 255, 0.3)",
+                  bgcolor: "rgba(0, 0, 0, 0.2)" 
+                }
+              }}
               helperText="Base time is fixed at 1 minute"
             />
             <TextField
@@ -290,6 +388,9 @@ const TransportationManager = () => {
               fullWidth
               value={formData.baseCost}
               onChange={handleInputChange}
+              required
+              error={formData.baseCost <= 0}
+              helperText={formData.baseCost <= 0 ? "Cost must be greater than 0" : ""}
             />
             <FormControlLabel
               control={
@@ -306,11 +407,31 @@ const TransportationManager = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained" 
+            color="primary"
+            disabled={!formData.name || formData.baseCost <= 0}
+          >
             {editingTransport ? 'Update' : 'Add'}
           </Button>
         </DialogActions>
       </Dialog>
+      
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

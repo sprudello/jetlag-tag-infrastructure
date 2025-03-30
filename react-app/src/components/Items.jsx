@@ -24,7 +24,7 @@ const Items = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = 'http://localhost:5296';
+  const API_URL = 'http://localhost:5296'; // TODO: Replace with API_CONFIG.BASE_URL
 
   useEffect(() => {
     const fetchItems = async () => {
