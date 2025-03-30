@@ -19,24 +19,40 @@ import {
   MonetizationOn as CurrencyIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import userService from '../services/userService';
 import '../styles/pages/profile.scss';
 
 const Profile = () => {
   const { currentUser } = useAuth();
   const [userData, setUserData] = useState(null);
+  const [challengeStats, setChallengeStats] = useState({ successCount: 0, failedCount: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        if (currentUser) {
-          // Use the currency from the currentUser if available
+        if (currentUser?.token) {
+          // Get user data from API
+          const user = await userService.getUserById(currentUser.userId, currentUser.token);
+          
           setUserData({
-            username: currentUser.username || 'User',
-            currency: currentUser.currency || 0,
-            isAdmin: currentUser.isAdmin || false
+            username: user.username,
+            currency: user.currency,
+            isAdmin: user.isAdmin
           });
+          
+          // Get challenge statistics
+          try {
+            const stats = await userService.getChallengeCounts(currentUser.userId, currentUser.token);
+            setChallengeStats({
+              successCount: stats.successCount,
+              failedCount: stats.failedCount
+            });
+          } catch (statsErr) {
+            console.error('Error fetching challenge stats:', statsErr);
+            // Continue with default values if stats fetch fails
+          }
         } else {
           setUserData({
             username: 'User',
@@ -45,7 +61,7 @@ const Profile = () => {
           });
         }
       } catch (err) {
-        setError('Failed to load user data');
+        setError('Failed to load user data: ' + err.message);
       } finally {
         setLoading(false);
       }
@@ -118,7 +134,7 @@ const Profile = () => {
                 <CardContent>
                   <ChallengeIcon color="primary" fontSize="large" />
                   <Typography variant="h6">Challenges</Typography>
-                  <Typography variant="h4">0</Typography>
+                  <Typography variant="h4">{challengeStats.successCount}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Completed
                   </Typography>
@@ -131,7 +147,7 @@ const Profile = () => {
                 <CardContent>
                   <ChallengeIcon color="error" fontSize="large" />
                   <Typography variant="h6">Challenges</Typography>
-                  <Typography variant="h4">0</Typography>
+                  <Typography variant="h4">{challengeStats.failedCount}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Failed
                   </Typography>

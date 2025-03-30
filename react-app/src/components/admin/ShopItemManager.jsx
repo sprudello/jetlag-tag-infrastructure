@@ -284,7 +284,7 @@ const ShopItemManager = () => {
             <TableCell>Description</TableCell>
             <TableCell>Cost</TableCell>
             <TableCell>Multiplier</TableCell>
-            <TableCell>Status</TableCell>
+            {/* Status column removed */}
             <TableCell>Actions</TableCell>
           </TableRow>
         </TableHead>
@@ -296,20 +296,12 @@ const ShopItemManager = () => {
               <TableCell>{item.description}</TableCell>
               <TableCell>{item.cost} coins</TableCell>
               <TableCell>{item.multiplier ? `${item.multiplier}x` : 'N/A'}</TableCell>
-              <TableCell>
-                {item.active ? (
-                  <Typography color="primary">Active</Typography>
-                ) : (
-                  <Typography color="error">Inactive</Typography>
-                )}
-              </TableCell>
+              {/* Status cell removed */}
               <TableCell>
                 <IconButton onClick={() => handleOpenDialog(item)} color="primary">
                   <EditIcon />
                 </IconButton>
-                <IconButton onClick={() => handleToggleActive(item.id)} color={item.active ? "success" : "default"}>
-                  {item.active ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                </IconButton>
+                {/* Toggle active button removed */}
                 <IconButton onClick={() => handleDelete(item.id)} color="error">
                   <DeleteIcon />
                 </IconButton>
@@ -467,17 +459,7 @@ const ShopItemManager = () => {
               </Box>
             )}
             
-            <FormControlLabel
-              control={
-                <Switch
-                  name="active"
-                  checked={formData.active}
-                  onChange={handleInputChange}
-                  color="primary"
-                />
-              }
-              label="Active"
-            />
+            {/* Active switch removed */}
           </Box>
         </DialogContent>
         <DialogActions>

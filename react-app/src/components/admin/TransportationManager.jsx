@@ -304,7 +304,7 @@ const TransportationManager = () => {
               <TableCell>Type</TableCell>
               <TableCell>Base Time (min)</TableCell>
               <TableCell>Base Cost</TableCell>
-              <TableCell>Status</TableCell>
+              {/* Status column removed */}
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -317,20 +317,12 @@ const TransportationManager = () => {
                 <TableCell>{transport.type}</TableCell>
                 <TableCell>{transport.baseTime}</TableCell>
                 <TableCell>{transport.baseCost} coins</TableCell>
-                <TableCell>
-                  {transport.active ? (
-                    <Typography color="primary">Active</Typography>
-                  ) : (
-                    <Typography color="error">Inactive</Typography>
-                  )}
-                </TableCell>
+                {/* Status cell removed */}
                 <TableCell>
                   <IconButton onClick={() => handleOpenDialog(transport)} color="primary">
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleToggleActive(transport.id)} color={transport.active ? "success" : "default"}>
-                    {transport.active ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
+                  {/* Toggle active button removed */}
                   <IconButton onClick={() => handleDelete(transport.id)} color="error">
                     <DeleteIcon />
                   </IconButton>
@@ -392,17 +384,7 @@ const TransportationManager = () => {
               error={formData.baseCost <= 0}
               helperText={formData.baseCost <= 0 ? "Cost must be greater than 0" : ""}
             />
-            <FormControlLabel
-              control={
-                <Switch
-                  name="active"
-                  checked={formData.active}
-                  onChange={handleInputChange}
-                  color="primary"
-                />
-              }
-              label="Active"
-            />
+            {/* Active switch removed */}
           </Box>
         </DialogContent>
         <DialogActions>

@@ -10,7 +10,15 @@ import {
   Chip,
   Divider,
   CircularProgress,
-  Paper
+  Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Slider,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { 
   DirectionsCar as TransportIcon,
@@ -19,6 +27,7 @@ import {
   DirectionsBike as BikeIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import transportationService from '../services/transportationService';
 import '../styles/pages/transportations.scss';
 
 const Transportations = () => {
@@ -26,33 +35,74 @@ const Transportations = () => {
   const [transportations, setTransportations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const API_URL = 'http://localhost:5296'; // TODO: Replace with API_CONFIG.BASE_URL
+  const [selectedTransport, setSelectedTransport] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [duration, setDuration] = useState(10); // Default 10 minutes
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     const fetchTransportations = async () => {
       try {
-        const response = await fetch(`${API_URL}/allTransportationTypes`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser?.token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setTransportations(data.filter(transport => transport.isActive));
-        } else {
-          setError('Failed to load transportations');
-        }
+        const data = await transportationService.getAllTransportationTypes(currentUser?.token);
+        setTransportations(data.filter(transport => transport.isActive));
       } catch (err) {
-        setError('Error connecting to server');
+        setError('Failed to load transportations: ' + err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTransportations();
+    if (currentUser?.token) {
+      fetchTransportations();
+    }
   }, [currentUser]);
+  
+  const handleUseTransportation = (transport) => {
+    setSelectedTransport(transport);
+    setOpenDialog(true);
+  };
+  
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+  
+  const handleDurationChange = (event, newValue) => {
+    setDuration(newValue);
+  };
+  
+  const handlePurchaseTransportation = async () => {
+    try {
+      setLoading(true);
+      
+      const purchaseData = {
+        userId: currentUser.userId,
+        transportationTypeId: selectedTransport.id,
+        durationInMinutes: duration
+      };
+      
+      await transportationService.purchaseTransportation(purchaseData, currentUser?.token);
+      
+      setNotification({
+        open: true,
+        message: `Transportation purchased for ${duration} minutes!`,
+        severity: 'success'
+      });
+      
+      setOpenDialog(false);
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Purchase failed: ${err.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
 
   const getTransportIcon = (type) => {
     switch (type?.toLowerCase()) {
@@ -118,7 +168,14 @@ const Transportations = () => {
                     </Box>
                   </CardContent>
                   <CardActions>
-                    <Button size="small" color="primary" variant="contained" fullWidth>
+                    <Button 
+                      size="small" 
+                      color="primary" 
+                      variant="contained" 
+                      fullWidth
+                      onClick={() => handleUseTransportation(transport)}
+                      disabled={loading}
+                    >
                       Use Transportation
                     </Button>
                   </CardActions>
@@ -128,6 +185,71 @@ const Transportations = () => {
           </Grid>
         )}
       </Box>
+      {/* Transportation Purchase Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        aria-labelledby="transport-dialog-title"
+      >
+        <DialogTitle id="transport-dialog-title">
+          Purchase {selectedTransport?.name}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, minWidth: 300 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Price: {selectedTransport?.pricePerMinute} coins per minute
+            </Typography>
+            
+            <Box sx={{ mt: 3 }}>
+              <Typography id="duration-slider" gutterBottom>
+                Duration (minutes): {duration}
+              </Typography>
+              <Slider
+                value={duration}
+                onChange={handleDurationChange}
+                aria-labelledby="duration-slider"
+                valueLabelDisplay="auto"
+                step={5}
+                marks
+                min={5}
+                max={60}
+              />
+            </Box>
+            
+            <Typography variant="h6" sx={{ mt: 2 }}>
+              Total Cost: {selectedTransport ? selectedTransport.pricePerMinute * duration : 0} coins
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="inherit">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handlePurchaseTransportation} 
+            color="primary" 
+            variant="contained"
+            disabled={loading}
+          >
+            Purchase
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

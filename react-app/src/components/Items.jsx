@@ -10,12 +10,15 @@ import {
   Chip,
   Divider,
   CircularProgress,
-  Paper
+  Paper,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { 
   ShoppingCart as ShopIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import itemService from '../services/itemService';
 import '../styles/pages/items.scss';
 
 const Items = () => {
@@ -23,33 +26,58 @@ const Items = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const API_URL = 'http://localhost:5296'; // TODO: Replace with API_CONFIG.BASE_URL
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const response = await fetch(`${API_URL}/AllItems`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser?.token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setItems(data.filter(item => item.isActive));
-        } else {
-          setError('Failed to load items');
-        }
+        const data = await itemService.getAllItems(currentUser?.token);
+        setItems(data.filter(item => item.isActive));
       } catch (err) {
-        setError('Error connecting to server');
+        setError('Failed to load items: ' + err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchItems();
+    if (currentUser?.token) {
+      fetchItems();
+    }
   }, [currentUser]);
+  
+  const handleBuyItem = async (itemId) => {
+    try {
+      setLoading(true);
+      const purchaseData = {
+        userId: currentUser.userId,
+        itemId: itemId
+      };
+      
+      const result = await itemService.buyItem(purchaseData, currentUser?.token);
+      
+      setNotification({
+        open: true,
+        message: 'Item purchased successfully!',
+        severity: 'success'
+      });
+      
+      // Update user currency in UI if needed
+      // This would typically be handled by refreshing the user data
+      
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Purchase failed: ${err.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
 
   if (loading) {
     return (
@@ -103,7 +131,14 @@ const Items = () => {
                     </Box>
                   </CardContent>
                   <CardActions>
-                    <Button size="small" color="secondary" variant="contained" fullWidth>
+                    <Button 
+                      size="small" 
+                      color="secondary" 
+                      variant="contained" 
+                      fullWidth
+                      onClick={() => handleBuyItem(item.id)}
+                      disabled={loading}
+                    >
                       Purchase
                     </Button>
                   </CardActions>
@@ -113,6 +148,20 @@ const Items = () => {
           </Grid>
         )}
       </Box>
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

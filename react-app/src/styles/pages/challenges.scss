@@ -39,4 +39,23 @@
       margin-top: auto;
     }
   }
+  
+  .challenge-card-container {
+    display: flex;
+    justify-content: center;
+    margin: vars.$spacing-lg 0;
+  }
+  
+  .challenge-card-flip {
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    
+    &:hover:not(.flipped) {
+      transform: translateY(-10px);
+    }
+    
+    &.flipped {
+      cursor: default;
+    }
+  }
 }

@@ -254,7 +254,7 @@ const ChallengeManager = () => {
               <TableCell>Title</TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Reward</TableCell>
-              <TableCell>Status</TableCell>
+              {/* Status column removed */}
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -265,20 +265,12 @@ const ChallengeManager = () => {
                 <TableCell>{challenge.title}</TableCell>
                 <TableCell>{challenge.description}</TableCell>
                 <TableCell>{challenge.reward} coins</TableCell>
-                <TableCell>
-                  {challenge.active ? (
-                    <Typography color="primary">Active</Typography>
-                  ) : (
-                    <Typography color="error">Inactive</Typography>
-                  )}
-                </TableCell>
+                {/* Status cell removed */}
                 <TableCell>
                   <IconButton onClick={() => handleOpenDialog(challenge)} color="primary">
                     <EditIcon />
                   </IconButton>
-                  <IconButton onClick={() => handleToggleActive(challenge.id)} color={challenge.active ? "success" : "default"}>
-                    {challenge.active ? <VisibilityIcon /> : <VisibilityOffIcon />}
-                  </IconButton>
+                  {/* Toggle active button removed */}
                   <IconButton onClick={() => handleDelete(challenge.id)} color="error">
                     <DeleteIcon />
                   </IconButton>
@@ -327,17 +319,7 @@ const ChallengeManager = () => {
               error={formData.reward <= 0}
               helperText={formData.reward <= 0 ? "Reward must be greater than 0" : ""}
             />
-            <FormControlLabel
-              control={
-                <Switch
-                  name="active"
-                  checked={formData.active}
-                  onChange={handleInputChange}
-                  color="primary"
-                />
-              }
-              label="Active"
-            />
+            {/* Active switch removed */}
           </Box>
         </DialogContent>
         <DialogActions>

@@ -19,6 +19,9 @@ import {
   ShoppingCart as ShopIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import challengeService from '../services/challengeService';
+import transportationService from '../services/transportationService';
+import itemService from '../services/itemService';
 import '../styles/pages/home.scss';
 
 const Home = () => {
@@ -37,66 +40,38 @@ const Home = () => {
     shopItems: null
   });
 
-  const API_URL = 'http://localhost:5296'; // TODO: Replace with API_CONFIG.BASE_URL
-
   useEffect(() => {
     const fetchData = async () => {
+      if (!currentUser?.token) return;
+      
       // Fetch challenges
       try {
-        const challengesResponse = await fetch(`${API_URL}/allChallenges`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser?.token}`
-          }
-        });
-        
-        if (challengesResponse.ok) {
-          const data = await challengesResponse.json();
-          setChallenges(data.filter(challenge => challenge.isActive).slice(0, 3));
-        } else {
-          setError(prev => ({ ...prev, challenges: 'Failed to load challenges' }));
-        }
+        const data = await challengeService.getAllChallenges(currentUser?.token);
+        // Make sure we're only showing active challenges
+        const activeData = data.filter(challenge => challenge.isActive === true);
+        setChallenges(activeData.slice(0, 3));
       } catch (err) {
-        setError(prev => ({ ...prev, challenges: 'Error connecting to server' }));
+        setError(prev => ({ ...prev, challenges: 'Failed to load challenges: ' + err.message }));
       } finally {
         setLoading(prev => ({ ...prev, challenges: false }));
       }
 
       // Fetch transportations
       try {
-        const transportationsResponse = await fetch(`${API_URL}/allTransportationTypes`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser?.token}`
-          }
-        });
-        
-        if (transportationsResponse.ok) {
-          const data = await transportationsResponse.json();
-          setTransportations(data.filter(transport => transport.isActive).slice(0, 3));
-        } else {
-          setError(prev => ({ ...prev, transportations: 'Failed to load transportations' }));
-        }
+        const data = await transportationService.getAllTransportationTypes(currentUser?.token);
+        setTransportations(data.filter(transport => transport.isActive).slice(0, 3));
       } catch (err) {
-        setError(prev => ({ ...prev, transportations: 'Error connecting to server' }));
+        setError(prev => ({ ...prev, transportations: 'Failed to load transportations: ' + err.message }));
       } finally {
         setLoading(prev => ({ ...prev, transportations: false }));
       }
 
       // Fetch shop items
       try {
-        const shopItemsResponse = await fetch(`${API_URL}/AllItems`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser?.token}`
-          }
-        });
-        
-        if (shopItemsResponse.ok) {
-          const data = await shopItemsResponse.json();
-          setShopItems(data.filter(item => item.isActive).slice(0, 3));
-        } else {
-          setError(prev => ({ ...prev, shopItems: 'Failed to load shop items' }));
-        }
+        const data = await itemService.getAllItems(currentUser?.token);
+        setShopItems(data.filter(item => item.isActive).slice(0, 3));
       } catch (err) {
-        setError(prev => ({ ...prev, shopItems: 'Error connecting to server' }));
+        setError(prev => ({ ...prev, shopItems: 'Failed to load shop items: ' + err.message }));
       } finally {
         setLoading(prev => ({ ...prev, shopItems: false }));
       }
@@ -125,7 +100,7 @@ const Home = () => {
         </Typography>
       ) : items.length === 0 ? (
         <Typography sx={{ p: 2 }}>
-          No {title.toLowerCase()} available
+          No active {title.toLowerCase()}
         </Typography>
       ) : (
         <Grid container spacing={3}>
