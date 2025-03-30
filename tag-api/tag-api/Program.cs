@@ -36,13 +36,15 @@ namespace tag_api
             app.MapControllers();
 
             // Apply any pending migrations at startup.
-            using (var scope = app.Services.CreateScope())
+            /*using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
                 dbContext.Database.Migrate();
-            }
+            }*/
 
             app.Run();
         }
     }
 }
+//Server=docker_sqlserver, 1433; Database=product_db; User Id=sa; Password=myPassword1!; TrustServerCertificate=True;
+//Server=localhost;Database=tagDb;Trusted_Connection=true;TrustServerCertificate=true;
