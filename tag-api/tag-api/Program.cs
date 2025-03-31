@@ -57,8 +57,16 @@ namespace tag_api
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-                dbContext.Database.Migrate();
+                try
+                {
+                    dbContext.Database.Migrate();
+                }
+                catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 1801) // 1801 = "database already exists"
+                {
+                    // Log the exception and continue, or handle accordingly.
+                }
             }
+
 
             app.Run();
         }
