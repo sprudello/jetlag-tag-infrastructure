@@ -151,5 +151,21 @@ namespace tag_api.Controllers
 
             return Ok(new { successCount, failedCount });
         }
+
+        // GET: api/UserChallenges/currentChallenge/{userId}
+        [HttpGet("/currentChallenge/{userId}")]
+        public async Task<IActionResult> GetCurrentUserChallenge(int userId)
+        {
+            // Retrieve the ongoing challenge for the given user.
+            var currentChallenge = await _context.UserChallenges
+                .Include(uc => uc.ChallengeCard)
+                .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.Status == ChallengeStatus.InProgress);
+
+            if (currentChallenge == null)
+                return NotFound("No ongoing challenge found for this user.");
+
+            return Ok(currentChallenge);
+        }
+
     }
 }
