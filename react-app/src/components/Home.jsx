@@ -48,29 +48,63 @@ const Home = () => {
     const fetchData = async () => {
       if (!currentUser?.token) return;
       
-      // Fetch challenges
+      // Fetch user's active challenge
       try {
+        // In a real app, you would fetch the user's active challenge from a dedicated endpoint
+        // For now, we'll fetch all challenges and pretend one is active
         const data = await challengeService.getAllChallenges(currentUser?.token);
-        // Make sure we're only showing active challenges
         const activeData = data.filter(challenge => challenge.isActive === true);
-        setChallenges(activeData.slice(0, 3));
+        if (activeData.length > 0) {
+          // Simulate that the first challenge is the user's active challenge
+          setChallenges([{...activeData[0], isUserActive: true}]);
+        }
       } catch (err) {
-        setError(prev => ({ ...prev, challenges: 'Failed to load challenges: ' + err.message }));
+        setError(prev => ({ ...prev, challenges: 'Failed to load active challenge: ' + err.message }));
       } finally {
         setLoading(prev => ({ ...prev, challenges: false }));
       }
 
-      // Fetch transportations
+      // Fetch user's purchased items
       try {
-        const data = await transportationService.getAllTransportationTypes(currentUser?.token);
-        setTransportations(data.filter(transport => transport.isActive).slice(0, 3));
+        // In a real app, you would fetch all user items from a dedicated endpoint
+        // For now, we'll simulate user-specific purchased items based on user ID
+        // This ensures different users see different items
+        const userId = currentUser.userId || 0;
+        
+        // Generate user-specific items based on user ID
+        const userSpecificItems = [];
+        
+        // Only add items if they "belong" to this user (based on user ID)
+        if (userId % 2 === 0) { // Even user IDs get multiplier
+          userSpecificItems.push({ 
+            id: 1, 
+            name: "2x Multiplier", 
+            description: "Doubles your challenge rewards", 
+            price: 200, 
+            isActive: true,
+            userId: userId
+          });
+        }
+        
+        if (userId % 3 === 0) { // User IDs divisible by 3 get veto
+          userSpecificItems.push({ 
+            id: 2, 
+            name: "Challenge Veto", 
+            description: "Skip a challenge without penalty", 
+            price: 300, 
+            isActive: true,
+            userId: userId
+          });
+        }
+        
+        setUserItems(userSpecificItems);
       } catch (err) {
-        setError(prev => ({ ...prev, transportations: 'Failed to load transportations: ' + err.message }));
+        setError(prev => ({ ...prev, userItems: 'Failed to load user items: ' + err.message }));
       } finally {
-        setLoading(prev => ({ ...prev, transportations: false }));
+        setLoading(prev => ({ ...prev, userItems: false }));
       }
-
-      // Fetch shop items
+      
+      // Fetch shop items for preview
       try {
         const data = await itemService.getAllItems(currentUser?.token);
         setShopItems(data.filter(item => item.isActive).slice(0, 3));
@@ -78,21 +112,6 @@ const Home = () => {
         setError(prev => ({ ...prev, shopItems: 'Failed to load shop items: ' + err.message }));
       } finally {
         setLoading(prev => ({ ...prev, shopItems: false }));
-      }
-      
-      // Fetch user's owned items
-      try {
-        // For demonstration, we'll fetch a specific item by ID
-        // In a real app, you would fetch all user items from a dedicated endpoint
-        const itemId = 1; // Example item ID
-        const item = await itemService.getItemById(itemId, currentUser?.token);
-        if (item) {
-          setUserItems([item]);
-        }
-      } catch (err) {
-        setError(prev => ({ ...prev, userItems: 'Failed to load user items: ' + err.message }));
-      } finally {
-        setLoading(prev => ({ ...prev, userItems: false }));
       }
     };
 
@@ -252,14 +271,23 @@ const Home = () => {
               Welcome, {currentUser?.username || 'User'}!
             </Typography>
             <Typography variant="body1">
-              Ready for your next challenge? Check out what's available below.
+              Here's an overview of your current activity.
             </Typography>
           </Box>
         </Box>
       </Paper>
 
+      {challenges.length > 0 && renderSection(
+        "Your Active Challenge", 
+        <ChallengeIcon color="primary" sx={{ mr: 1 }} />, 
+        challenges, 
+        loading.challenges, 
+        error.challenges, 
+        renderChallengeItem
+      )}
+
       {userItems.length > 0 && renderSection(
-        "Your Items", 
+        "Your Purchased Items", 
         <InventoryIcon color="success" sx={{ mr: 1 }} />, 
         userItems, 
         loading.userItems, 
@@ -268,25 +296,7 @@ const Home = () => {
       )}
 
       {renderSection(
-        "Active Challenges", 
-        <ChallengeIcon color="primary" sx={{ mr: 1 }} />, 
-        challenges, 
-        loading.challenges, 
-        error.challenges, 
-        renderChallengeItem
-      )}
-
-      {renderSection(
-        "Available Transportations", 
-        <TransportIcon color="primary" sx={{ mr: 1 }} />, 
-        transportations, 
-        loading.transportations, 
-        error.transportations, 
-        renderTransportationItem
-      )}
-
-      {renderSection(
-        "Shop Items", 
+        "Shop Preview", 
         <ShopIcon color="secondary" sx={{ mr: 1 }} />, 
         shopItems, 
         loading.shopItems, 

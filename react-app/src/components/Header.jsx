@@ -78,7 +78,7 @@ function Header({ onPageChange }) {
     { name: 'Home', icon: <HomeIcon fontSize="small" /> },
     { name: 'Challenges', icon: <ChallengesIcon fontSize="small" /> },
     { name: 'Transportations', icon: <TransportIcon fontSize="small" /> },
-    { name: 'Items', icon: <ItemsIcon fontSize="small" /> },
+    { name: 'Shop', icon: <ShopIcon fontSize="small" /> },
     { name: 'Profile', icon: <ProfileIcon fontSize="small" />, onClick: handleProfileClick }
   ];
   

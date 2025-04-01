@@ -29,6 +29,9 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [userItems, setUserItems] = useState([]);
+  const [activeChallenge, setActiveChallenge] = useState(null);
+  
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -52,6 +55,54 @@ const Profile = () => {
           } catch (statsErr) {
             console.error('Error fetching challenge stats:', statsErr);
             // Continue with default values if stats fetch fails
+          }
+          
+          // Fetch user's active challenge
+          try {
+            // In a real app, you would fetch the user's active challenge from a dedicated endpoint
+            // For now, we'll simulate an active challenge
+            const challenges = await challengeService.getAllChallenges(currentUser.token);
+            if (challenges.length > 0) {
+              setActiveChallenge({
+                ...challenges[0],
+                startTime: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
+              });
+            }
+          } catch (challengeErr) {
+            console.error('Error fetching active challenge:', challengeErr);
+          }
+          
+          // Fetch user's purchased items
+          try {
+            // In a real app, you would fetch all user items from a dedicated endpoint
+            // For now, we'll simulate user-specific purchased items based on user ID
+            const userId = currentUser.userId || 0;
+            const userSpecificItems = [];
+            
+            // Only add items if they "belong" to this user (based on user ID)
+            if (userId % 2 === 0) { // Even user IDs get multiplier
+              userSpecificItems.push({ 
+                id: 1, 
+                name: "2x Multiplier", 
+                description: "Doubles your challenge rewards", 
+                purchaseDate: new Date().toISOString(),
+                userId: userId
+              });
+            }
+            
+            if (userId % 3 === 0) { // User IDs divisible by 3 get veto
+              userSpecificItems.push({ 
+                id: 2, 
+                name: "Challenge Veto", 
+                description: "Skip a challenge without penalty", 
+                purchaseDate: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+                userId: userId
+              });
+            }
+            
+            setUserItems(userSpecificItems);
+          } catch (itemsErr) {
+            console.error('Error fetching user items:', itemsErr);
           }
         } else {
           setUserData({
@@ -160,7 +211,7 @@ const Profile = () => {
                 <CardContent>
                   <ShopIcon color="success" fontSize="large" />
                   <Typography variant="h6">Items</Typography>
-                  <Typography variant="h4">0</Typography>
+                  <Typography variant="h4">{userItems.length}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Purchased
                   </Typography>
@@ -169,6 +220,57 @@ const Profile = () => {
             </Grid>
           </Grid>
         </Box>
+        
+        {activeChallenge && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" component="h2" gutterBottom>
+              Active Challenge
+            </Typography>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">{activeChallenge.title}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {activeChallenge.description}
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                  <Chip 
+                    label={`${activeChallenge.reward} coins`} 
+                    color="primary" 
+                    size="small" 
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    Started: {new Date(activeChallenge.startTime).toLocaleString()}
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+        )}
+        
+        {userItems.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" component="h2" gutterBottom>
+              Your Items
+            </Typography>
+            <Grid container spacing={2}>
+              {userItems.map(item => (
+                <Grid item xs={12} sm={6} key={item.id}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">{item.name}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.description}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Purchased: {new Date(item.purchaseDate).toLocaleDateString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
       </Paper>
     </Box>
   );

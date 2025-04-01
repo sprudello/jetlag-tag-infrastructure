@@ -63,7 +63,7 @@ function AppContent() {
         return <Challenges />;
       case 'Transportations':
         return <Transportations />;
-      case 'Items':
+      case 'Shop':
         return <Items />;
       case 'Profile':
         return <Profile />;

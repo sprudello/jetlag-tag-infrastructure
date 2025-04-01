@@ -100,7 +100,7 @@ const Items = () => {
       <Paper elevation={1} className="page-header">
         <ShopIcon color="secondary" sx={{ mr: 1 }} />
         <Typography variant="h4" component="h1">
-          Shop Items
+          Shop
         </Typography>
       </Paper>
 

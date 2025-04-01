@@ -70,12 +70,22 @@ const Challenges = () => {
     const fetchUserItems = async () => {
       try {
         // This would be replaced with an actual API call to get user's items
-        // For now, we'll simulate having some items
-        const mockItems = [
-          { id: 1, name: "2x Multiplier", type: "multiplier", value: 2 },
-          { id: 2, name: "5x Multiplier", type: "multiplier", value: 5 },
-          { id: 3, name: "Challenge Veto", type: "veto" }
-        ];
+        // For now, we'll simulate user-specific items based on user ID
+        const userId = currentUser.userId || 0;
+        let mockItems = [];
+        
+        // Only add items if they "belong" to this user (based on user ID)
+        if (userId % 2 === 0) { // Even user IDs get 2x multiplier
+          mockItems.push({ id: 1, name: "2x Multiplier", type: "multiplier", value: 2, userId: userId });
+        }
+        
+        if (userId % 5 === 0) { // User IDs divisible by 5 get 5x multiplier
+          mockItems.push({ id: 2, name: "5x Multiplier", type: "multiplier", value: 5, userId: userId });
+        }
+        
+        if (userId % 3 === 0) { // User IDs divisible by 3 get veto
+          mockItems.push({ id: 3, name: "Challenge Veto", type: "veto", userId: userId });
+        }
         
         setUserItems(mockItems);
         setMultiplierItems(mockItems.filter(item => item.type === "multiplier"));
@@ -84,43 +94,33 @@ const Challenges = () => {
         console.error("Error fetching user items:", err);
       }
     };
-    
-    const checkActiveChallenge = async () => {
-      try {
-        // This would be an API call to check if user has active challenges
-        // For now, we'll set it to false by default
-        setHasActiveChallenge(false);
-        
-        // In a real implementation, you would do something like:
-        // const activeChallenge = await challengeService.getUserActiveChallenge(currentUser.userId, currentUser?.token);
-        // setHasActiveChallenge(!!activeChallenge);
-      } catch (err) {
-        console.error("Error checking active challenges:", err);
-      }
-    };
 
     if (currentUser?.token) {
       fetchChallenges();
       fetchUserItems();
-      checkActiveChallenge();
     }
   }, [currentUser]);
   
-  const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
+  // Removed hasActiveChallenge state
 
   const handleCardClick = () => {
-    if (!cardFlipped && challenges.length > 0 && !hasActiveChallenge) {
-      // Select a random challenge from the available ones
-      const randomIndex = Math.floor(Math.random() * challenges.length);
-      const challenge = challenges[randomIndex];
-      setRandomChallenge(challenge);
-      setCardFlipped(true);
-    } else if (hasActiveChallenge) {
-      setNotification({
-        open: true,
-        message: 'You already have an active challenge. Complete it first!',
-        severity: 'warning'
-      });
+    if (!cardFlipped && challenges.length > 0) {
+      // Show loading animation before revealing the challenge
+      setLoading(true);
+      
+      // Add a slight delay to simulate drawing a card
+      setTimeout(() => {
+        // Select a random challenge from the available ones
+        const randomIndex = Math.floor(Math.random() * challenges.length);
+        const challenge = challenges[randomIndex];
+        setRandomChallenge(challenge);
+        setCardFlipped(true);
+        setLoading(false);
+        
+        // Play a card flip sound effect if available
+        // const flipSound = new Audio('/sounds/card-flip.mp3');
+        // flipSound.play().catch(e => console.log('Audio play failed:', e));
+      }, 300);
     }
   };
   
@@ -138,8 +138,7 @@ const Challenges = () => {
       
       setUserChallengeId(result.userChallengeId);
       
-      // Mark that user has an active challenge
-      setHasActiveChallenge(true);
+      // User has accepted the challenge - it will show in the overview
       
       // Open dialog to show challenge details
       setOpenDialog(true);
@@ -164,8 +163,7 @@ const Challenges = () => {
         severity: 'success'
       });
       
-      // Reset active challenge status
-      setHasActiveChallenge(false);
+      // Challenge vetoed
     } else {
       // Apply penalty for vetoing without a veto item
       handleCompleteFail();
@@ -220,9 +218,6 @@ const Challenges = () => {
       // Reset multiplier after use
       setCurrentMultiplier(1);
       
-      // Reset active challenge status
-      setHasActiveChallenge(false);
-      
       setOpenDialog(false);
       setCardFlipped(false);
       setRandomChallenge(null);
@@ -252,9 +247,6 @@ const Challenges = () => {
         message: 'Challenge failed. A penalty has been applied.',
         severity: 'warning'
       });
-      
-      // Reset active challenge status
-      setHasActiveChallenge(false);
       
       setOpenDialog(false);
       setCardFlipped(false);
@@ -301,19 +293,19 @@ const Challenges = () => {
       <Paper elevation={1} className="page-header">
         <ChallengeIcon color="primary" sx={{ mr: 1 }} />
         <Typography variant="h4" component="h1">
-          Available Challenges
+          Draw a Challenge
         </Typography>
       </Paper>
 
       <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {challenges.length === 0 ? (
           <Typography sx={{ p: 2 }}>
-            No active challenges
+            No challenges available to draw
           </Typography>
         ) : (
           <>
             <Typography variant="h6" gutterBottom>
-              Click the card to reveal a random challenge
+              Click the card to draw a random challenge
             </Typography>
             
             {currentMultiplier > 1 && (
@@ -333,7 +325,11 @@ const Challenges = () => {
                   width: 280,
                   height: 400,
                   perspective: '1000px',
-                  cursor: cardFlipped ? 'default' : 'pointer'
+                  cursor: cardFlipped ? 'default' : 'pointer',
+                  transition: 'transform 0.3s ease',
+                  '&:hover': {
+                    transform: !cardFlipped ? 'translateY(-10px)' : 'none'
+                  }
                 }}
               >
                 <Box 
@@ -342,13 +338,14 @@ const Challenges = () => {
                     width: '100%',
                     height: '100%',
                     transformStyle: 'preserve-3d',
-                    transition: 'transform 0.6s',
-                    transform: cardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                    transition: 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    transform: cardFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)'
                   }}
                 >
                   {/* Card Front */}
                   <Paper 
-                    elevation={3}
+                    elevation={5}
                     sx={{
                       position: 'absolute',
                       width: '100%',
@@ -358,19 +355,34 @@ const Challenges = () => {
                       flexDirection: 'column',
                       justifyContent: 'center',
                       alignItems: 'center',
-                      backgroundColor: '#646cff',
-                      borderRadius: '16px'
+                      background: 'linear-gradient(135deg, #646cff 0%, #535bf2 100%)',
+                      borderRadius: '16px',
+                      border: '2px solid rgba(255, 255, 255, 0.1)'
                     }}
                   >
-                    <QuestionIcon sx={{ fontSize: 80, color: 'white' }} />
-                    <Typography variant="h5" color="white" sx={{ mt: 2 }}>
-                      Tap to reveal
+                    <QuestionIcon sx={{ 
+                      fontSize: 100, 
+                      color: 'white',
+                      filter: 'drop-shadow(0 0 10px rgba(0,0,0,0.3))',
+                      animation: !cardFlipped ? 'pulse 1.5s infinite' : 'none',
+                      '@keyframes pulse': {
+                        '0%': { transform: 'scale(1)' },
+                        '50%': { transform: 'scale(1.1)' },
+                        '100%': { transform: 'scale(1)' }
+                      }
+                    }} />
+                    <Typography variant="h5" color="white" sx={{ 
+                      mt: 2,
+                      fontWeight: 'bold',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }}>
+                      Tap to Draw Challenge
                     </Typography>
                   </Paper>
                   
                   {/* Card Back */}
                   <Paper 
-                    elevation={3}
+                    elevation={5}
                     sx={{
                       position: 'absolute',
                       width: '100%',
@@ -380,22 +392,36 @@ const Challenges = () => {
                       display: 'flex',
                       flexDirection: 'column',
                       padding: 3,
-                      borderRadius: '16px'
+                      borderRadius: '16px',
+                      background: 'linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%)',
+                      border: '2px solid rgba(255, 255, 255, 0.1)'
                     }}
                   >
                     {randomChallenge && (
                       <>
-                        <Typography variant="h5" gutterBottom>
+                        <Typography variant="h5" gutterBottom sx={{ 
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}>
                           {randomChallenge.title}
                         </Typography>
-                        <Typography variant="body1" sx={{ flex: 1, overflow: 'auto' }}>
+                        <Typography variant="body1" sx={{ 
+                          flex: 1, 
+                          overflow: 'auto',
+                          backgroundColor: 'rgba(0,0,0,0.1)',
+                          padding: 2,
+                          borderRadius: 2,
+                          marginY: 1
+                        }}>
                           {randomChallenge.description}
                         </Typography>
                         <Divider sx={{ my: 2 }} />
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Chip 
                             label={`${randomChallenge.reward} coins`} 
-                            color="primary" 
+                            color="primary"
+                            sx={{ fontWeight: 'bold' }}
                           />
                           {multiplierItems.length > 0 && (
                             <Button
@@ -404,6 +430,7 @@ const Challenges = () => {
                               color="secondary"
                               variant="outlined"
                               size="small"
+                              sx={{ fontWeight: 'bold' }}
                             >
                               Apply Multiplier
                             </Button>
@@ -414,6 +441,7 @@ const Challenges = () => {
                             variant="outlined" 
                             color="error"
                             onClick={handleVetoChallenge}
+                            sx={{ fontWeight: 'bold' }}
                           >
                             Veto
                           </Button>
@@ -421,6 +449,7 @@ const Challenges = () => {
                             variant="contained" 
                             color="primary"
                             onClick={() => handleAcceptChallenge(randomChallenge)}
+                            sx={{ fontWeight: 'bold' }}
                           >
                             Accept
                           </Button>
@@ -432,7 +461,11 @@ const Challenges = () => {
               </Box>
             </Box>
             
-            {/* Draw New Card button removed - user must accept or veto */}
+            {!cardFlipped && (
+              <Typography variant="body2" color="text.secondary">
+                Draw a card to see your next challenge!
+              </Typography>
+            )}
           </>
         )}
       </Box>
