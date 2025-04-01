@@ -24,7 +24,14 @@ const itemService = {
    * @returns {Promise<Object>} - Item data
    */
   getItemById: async (id, token) => {
-    return await apiService.get(`/Item/${id}`, token);
+    try {
+      const item = await apiService.get(`/Item/${id}`, token);
+      console.log(`Fetched item by ID ${id}:`, item);
+      return item;
+    } catch (error) {
+      console.error(`Error fetching item with ID ${id}:`, error);
+      throw error;
+    }
   },
   
   /**

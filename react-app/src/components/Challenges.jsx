@@ -84,10 +84,25 @@ const Challenges = () => {
         console.error("Error fetching user items:", err);
       }
     };
+    
+    const checkActiveChallenge = async () => {
+      try {
+        // This would be an API call to check if user has active challenges
+        // For now, we'll set it to false by default
+        setHasActiveChallenge(false);
+        
+        // In a real implementation, you would do something like:
+        // const activeChallenge = await challengeService.getUserActiveChallenge(currentUser.userId, currentUser?.token);
+        // setHasActiveChallenge(!!activeChallenge);
+      } catch (err) {
+        console.error("Error checking active challenges:", err);
+      }
+    };
 
     if (currentUser?.token) {
       fetchChallenges();
       fetchUserItems();
+      checkActiveChallenge();
     }
   }, [currentUser]);
   
@@ -116,6 +131,11 @@ const Challenges = () => {
       
       // Pull a challenge card
       const result = await penaltyService.pullCard(currentUser.userId, currentUser?.token);
+      
+      if (!result || !result.userChallengeId) {
+        throw new Error('Failed to assign challenge to user');
+      }
+      
       setUserChallengeId(result.userChallengeId);
       
       // Mark that user has an active challenge

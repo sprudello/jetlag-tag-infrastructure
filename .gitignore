@@ -400,3 +400,4 @@ FodyWeavers.xsd
 *.sln.iml
 
 tag-api/
+jetlag-tag-infrastructure-main/

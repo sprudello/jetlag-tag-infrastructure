@@ -16,7 +16,8 @@ import {
 import { 
   EmojiEvents as ChallengeIcon,
   DirectionsCar as TransportIcon,
-  ShoppingCart as ShopIcon
+  ShoppingCart as ShopIcon,
+  Inventory as InventoryIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import challengeService from '../services/challengeService';
@@ -29,15 +30,18 @@ const Home = () => {
   const [challenges, setChallenges] = useState([]);
   const [transportations, setTransportations] = useState([]);
   const [shopItems, setShopItems] = useState([]);
+  const [userItems, setUserItems] = useState([]);
   const [loading, setLoading] = useState({
     challenges: true,
     transportations: true,
-    shopItems: true
+    shopItems: true,
+    userItems: true
   });
   const [error, setError] = useState({
     challenges: null,
     transportations: null,
-    shopItems: null
+    shopItems: null,
+    userItems: null
   });
 
   useEffect(() => {
@@ -74,6 +78,21 @@ const Home = () => {
         setError(prev => ({ ...prev, shopItems: 'Failed to load shop items: ' + err.message }));
       } finally {
         setLoading(prev => ({ ...prev, shopItems: false }));
+      }
+      
+      // Fetch user's owned items
+      try {
+        // For demonstration, we'll fetch a specific item by ID
+        // In a real app, you would fetch all user items from a dedicated endpoint
+        const itemId = 1; // Example item ID
+        const item = await itemService.getItemById(itemId, currentUser?.token);
+        if (item) {
+          setUserItems([item]);
+        }
+      } catch (err) {
+        setError(prev => ({ ...prev, userItems: 'Failed to load user items: ' + err.message }));
+      } finally {
+        setLoading(prev => ({ ...prev, userItems: false }));
       }
     };
 
@@ -188,6 +207,32 @@ const Home = () => {
     </Grid>
   );
 
+  const renderUserItemItem = (item) => (
+    <Grid item xs={12} md={4} key={item.id}>
+      <Card className="item-card user-item-card">
+        <CardContent>
+          <Typography variant="h6" component="h3" gutterBottom>
+            {item.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" className="card-description">
+            {item.description}
+          </Typography>
+          <Chip 
+            label="Owned" 
+            color="success" 
+            size="small" 
+            sx={{ mt: 2 }} 
+          />
+        </CardContent>
+        <CardActions>
+          <Button size="small" color="success">
+            Use Item
+          </Button>
+        </CardActions>
+      </Card>
+    </Grid>
+  );
+
   return (
     <Box className="home-container">
       <Paper elevation={2} className="welcome-section">
@@ -212,6 +257,15 @@ const Home = () => {
           </Box>
         </Box>
       </Paper>
+
+      {userItems.length > 0 && renderSection(
+        "Your Items", 
+        <InventoryIcon color="success" sx={{ mr: 1 }} />, 
+        userItems, 
+        loading.userItems, 
+        error.userItems, 
+        renderUserItemItem
+      )}
 
       {renderSection(
         "Active Challenges", 
