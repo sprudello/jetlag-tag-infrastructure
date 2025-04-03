@@ -23,6 +23,8 @@ import { useAuth } from '../contexts/AuthContext';
 import challengeService from '../services/challengeService';
 import transportationService from '../services/transportationService';
 import itemService from '../services/itemService';
+import apiService from '../services/apiService';
+import API_CONFIG from '../config/apiConfig';
 import '../styles/pages/home.scss';
 
 const Home = () => {
@@ -50,15 +52,50 @@ const Home = () => {
       
       // Fetch user's active challenge
       try {
-        // In a real app, you would fetch the user's active challenge from a dedicated endpoint
-        // For now, we'll fetch all challenges and pretend one is active
-        const data = await challengeService.getAllChallenges(currentUser?.token);
-        const activeData = data.filter(challenge => challenge.isActive === true);
-        if (activeData.length > 0) {
-          // Simulate that the first challenge is the user's active challenge
-          setChallenges([{...activeData[0], isUserActive: true}]);
+        // Use the new endpoint that returns challenge details directly
+        const response = await fetch(`${API_CONFIG.BASE_URL}/api/UserChallenges/currentChallenge/${currentUser.userId}`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser.token}`
+          }
+        });
+        
+        // If we get a 404, try the alternative endpoint format
+        if (response.status === 404) {
+          console.log("Trying alternative endpoint format...");
+          const altResponse = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
+            headers: {
+              'Authorization': `Bearer ${currentUser.token}`
+            }
+          });
+          
+          if (altResponse.ok) {
+            return altResponse;
+          }
+        }
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch current challenge: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.activeChallenge) {
+          // The challenge details are already included in the response
+          setChallenges([{
+            id: data.activeChallenge.card.id,
+            title: data.activeChallenge.card.title,
+            description: data.activeChallenge.card.description,
+            reward: data.activeChallenge.card.reward,
+            isActive: data.activeChallenge.card.isActive,
+            isUserActive: true,
+            startTime: data.activeChallenge.startTime,
+            userChallengeId: data.activeChallenge.id
+          }]);
+        } else {
+          setChallenges([]);
         }
       } catch (err) {
+        console.error("Error fetching active challenge:", err);
         setError(prev => ({ ...prev, challenges: 'Failed to load active challenge: ' + err.message }));
       } finally {
         setLoading(prev => ({ ...prev, challenges: false }));
@@ -104,15 +141,8 @@ const Home = () => {
         setLoading(prev => ({ ...prev, userItems: false }));
       }
       
-      // Fetch shop items for preview
-      try {
-        const data = await itemService.getAllItems(currentUser?.token);
-        setShopItems(data.filter(item => item.isActive).slice(0, 3));
-      } catch (err) {
-        setError(prev => ({ ...prev, shopItems: 'Failed to load shop items: ' + err.message }));
-      } finally {
-        setLoading(prev => ({ ...prev, shopItems: false }));
-      }
+      // We no longer need to fetch shop items for preview
+      // Instead, we'll just show all user's purchased items
     };
 
     fetchData();
@@ -277,31 +307,43 @@ const Home = () => {
         </Box>
       </Paper>
 
-      {challenges.length > 0 && renderSection(
-        "Your Active Challenge", 
-        <ChallengeIcon color="primary" sx={{ mr: 1 }} />, 
-        challenges, 
-        loading.challenges, 
-        error.challenges, 
-        renderChallengeItem
-      )}
+      <Box className="home-section">
+        <Box className="section-header">
+          <ChallengeIcon color="primary" sx={{ mr: 1 }} />
+          <Typography variant="h5" component="h2">
+            Your Active Challenge
+          </Typography>
+        </Box>
+        <Divider sx={{ my: 2 }} />
+        
+        {loading.challenges ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+            <CircularProgress />
+          </Box>
+        ) : error.challenges ? (
+          <Typography color="error" sx={{ p: 2 }}>
+            {error.challenges}
+          </Typography>
+        ) : challenges.length === 0 ? (
+          <Typography sx={{ p: 2 }}>
+            No challenge accepted. Visit the Challenges tab to accept one!
+          </Typography>
+        ) : (
+          <Grid container spacing={3}>
+            {challenges.map(challenge => renderChallengeItem(challenge))}
+          </Grid>
+        )}
+      </Box>
 
-      {userItems.length > 0 && renderSection(
-        "Your Purchased Items", 
-        <InventoryIcon color="success" sx={{ mr: 1 }} />, 
+      {/* We've moved the Purchased Items section to replace the Shop Preview */}
+
+      {renderSection(
+        "Purchased Items", 
+        <InventoryIcon color="secondary" sx={{ mr: 1 }} />, 
         userItems, 
         loading.userItems, 
         error.userItems, 
         renderUserItemItem
-      )}
-
-      {renderSection(
-        "Shop Preview", 
-        <ShopIcon color="secondary" sx={{ mr: 1 }} />, 
-        shopItems, 
-        loading.shopItems, 
-        error.shopItems, 
-        renderShopItem
       )}
     </Box>
   );

@@ -104,17 +104,28 @@ const Challenges = () => {
   // Removed hasActiveChallenge state
 
   const handleCardClick = () => {
-    if (!cardFlipped && challenges.length > 0) {
+    if (!cardFlipped) {
       // Show loading animation before revealing the challenge
       setLoading(true);
       
       // Add a slight delay to simulate drawing a card
       setTimeout(() => {
-        // Select a random challenge from the available ones
-        const randomIndex = Math.floor(Math.random() * challenges.length);
-        const challenge = challenges[randomIndex];
-        setRandomChallenge(challenge);
-        setCardFlipped(true);
+        // If challenges are loaded, select a random one
+        if (challenges.length > 0) {
+          const randomIndex = Math.floor(Math.random() * challenges.length);
+          const challenge = challenges[randomIndex];
+          setRandomChallenge(challenge);
+          setCardFlipped(true);
+        } else {
+          // If no challenges are available, show notification
+          setCardFlipped(false);
+          setNotification({
+            open: true,
+            message: 'Oops, no challenges available.',
+            severity: 'info'
+          });
+        }
+        
         setLoading(false);
         
         // Play a card flip sound effect if available
@@ -136,18 +147,40 @@ const Challenges = () => {
         throw new Error('Failed to assign challenge to user');
       }
       
-      setUserChallengeId(result.userChallengeId);
-      
-      // User has accepted the challenge - it will show in the overview
-      
-      // Open dialog to show challenge details
-      setOpenDialog(true);
-    } catch (err) {
+      // Redirect to home page to see the active challenge
       setNotification({
         open: true,
-        message: `Failed to start challenge: ${err.message}`,
-        severity: 'error'
+        message: 'Challenge accepted! Redirecting to overview...',
+        severity: 'success'
       });
+      
+      // Reset the card
+      setCardFlipped(false);
+      setRandomChallenge(null);
+      
+      // Redirect to home page after a short delay
+      setTimeout(() => {
+        window.location.href = '/'; // This will refresh the page and go to home
+      }, 1500);
+      
+    } catch (err) {
+      if (err.message.includes('already has an active challenge')) {
+        setNotification({
+          open: true,
+          message: 'You already have an active challenge. Complete it first!',
+          severity: 'warning'
+        });
+      } else {
+        setNotification({
+          open: true,
+          message: `Failed to start challenge: ${err.message}`,
+          severity: 'error'
+        });
+      }
+      
+      // Reset the card
+      setCardFlipped(false);
+      setRandomChallenge(null);
     } finally {
       setLoading(false);
     }
@@ -272,14 +305,7 @@ const Challenges = () => {
   
   // resetCard function removed as it's no longer needed
 
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
+  // Remove the loading check that was preventing the card from showing
   if (error) {
     return (
       <Typography color="error" sx={{ p: 3 }}>
@@ -298,11 +324,7 @@ const Challenges = () => {
       </Paper>
 
       <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {challenges.length === 0 ? (
-          <Typography sx={{ p: 2 }}>
-            No challenges available to draw
-          </Typography>
-        ) : (
+        {/* Always show the card, even if challenges are loading or empty */}
           <>
             <Typography variant="h6" gutterBottom>
               Click the card to draw a random challenge
@@ -467,53 +489,8 @@ const Challenges = () => {
               </Typography>
             )}
           </>
-        )}
       </Box>
-      {/* Challenge Dialog */}
-      <Dialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        aria-labelledby="challenge-dialog-title"
-        aria-describedby="challenge-dialog-description"
-      >
-        <DialogTitle id="challenge-dialog-title">
-          {selectedChallenge?.title}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="challenge-dialog-description">
-            {selectedChallenge?.description}
-          </DialogContentText>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              Base Reward: {selectedChallenge?.reward} coins
-            </Typography>
-            {currentMultiplier > 1 && (
-              <Typography variant="subtitle1" color="secondary" gutterBottom>
-                Multiplier: {currentMultiplier}x
-              </Typography>
-            )}
-            {currentMultiplier > 1 && (
-              <Typography variant="h6" color="primary" gutterBottom>
-                Total Reward: {selectedChallenge?.reward * currentMultiplier} coins
-              </Typography>
-            )}
-            <Typography variant="body2" color="text.secondary">
-              Complete this challenge to earn the reward. If you fail, a time penalty will be applied.
-            </Typography>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="inherit">
-            Cancel
-          </Button>
-          <Button onClick={handleCompleteFail} color="error">
-            Failed
-          </Button>
-          <Button onClick={handleCompleteSuccess} color="success" variant="contained">
-            Completed
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Challenge Dialog removed - redirecting to overview instead */}
       
       {/* Multiplier Menu */}
       <Menu

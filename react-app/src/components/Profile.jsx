@@ -20,6 +20,9 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import userService from '../services/userService';
+import challengeService from '../services/challengeService';
+import apiService from '../services/apiService';
+import API_CONFIG from '../config/apiConfig';
 import '../styles/pages/profile.scss';
 
 const Profile = () => {
@@ -59,13 +62,43 @@ const Profile = () => {
           
           // Fetch user's active challenge
           try {
-            // In a real app, you would fetch the user's active challenge from a dedicated endpoint
-            // For now, we'll simulate an active challenge
-            const challenges = await challengeService.getAllChallenges(currentUser.token);
-            if (challenges.length > 0) {
+            // Use the new endpoint that returns challenge details directly
+            const response = await fetch(`${API_CONFIG.BASE_URL}/api/UserChallenges/currentChallenge/${currentUser.userId}`, {
+              headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+              }
+            });
+            
+            // If we get a 404, try the alternative endpoint format
+            if (response.status === 404) {
+              console.log("Trying alternative endpoint format...");
+              const altResponse = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
+                headers: {
+                  'Authorization': `Bearer ${currentUser.token}`
+                }
+              });
+              
+              if (altResponse.ok) {
+                return altResponse;
+              }
+            }
+            
+            if (!response.ok) {
+              throw new Error(`Failed to fetch current challenge: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.activeChallenge) {
+              // The challenge details are already included in the response
               setActiveChallenge({
-                ...challenges[0],
-                startTime: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
+                id: data.activeChallenge.card.id,
+                title: data.activeChallenge.card.title,
+                description: data.activeChallenge.card.description,
+                reward: data.activeChallenge.card.reward,
+                isActive: data.activeChallenge.card.isActive,
+                startTime: data.activeChallenge.startTime,
+                userChallengeId: data.activeChallenge.id
               });
             }
           } catch (challengeErr) {
