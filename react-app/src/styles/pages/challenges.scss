@@ -8,6 +8,7 @@
     display: flex;
     align-items: center;
     padding: vars.$spacing-md;
+    justify-content: flex-start;
   }
   
   .challenge-card {

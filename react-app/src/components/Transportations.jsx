@@ -26,6 +26,7 @@ import {
   Train as TrainIcon,
   DirectionsBike as BikeIcon
 } from '@mui/icons-material';
+import GameRules from './GameRules';
 import { useAuth } from '../contexts/AuthContext';
 import transportationService from '../services/transportationService';
 import '../styles/pages/transportations.scss';
@@ -136,6 +137,9 @@ const Transportations = () => {
         <Typography variant="h4" component="h1">
           Available Transportations
         </Typography>
+        <Box sx={{ ml: 'auto' }}>
+          <GameRules />
+        </Box>
       </Paper>
 
       <Box sx={{ mt: 4 }}>

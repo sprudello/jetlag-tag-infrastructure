@@ -17,6 +17,7 @@ import {
 import { 
   ShoppingCart as ShopIcon
 } from '@mui/icons-material';
+import GameRules from './GameRules';
 import { useAuth } from '../contexts/AuthContext';
 import itemService from '../services/itemService';
 import '../styles/pages/items.scss';
@@ -102,6 +103,9 @@ const Items = () => {
         <Typography variant="h4" component="h1">
           Shop
         </Typography>
+        <Box sx={{ ml: 'auto' }}>
+          <GameRules />
+        </Box>
       </Paper>
 
       <Box sx={{ mt: 4 }}>

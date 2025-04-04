@@ -31,6 +31,7 @@ import {
   MoreVert as MoreIcon,
   QuestionMark as QuestionIcon
 } from '@mui/icons-material';
+import GameRules from './GameRules';
 import { useAuth } from '../contexts/AuthContext';
 import challengeService from '../services/challengeService';
 import penaltyService from '../services/penaltyService';
@@ -321,6 +322,9 @@ const Challenges = () => {
         <Typography variant="h4" component="h1">
           Draw a Challenge
         </Typography>
+        <Box sx={{ ml: 'auto' }}>
+          <GameRules />
+        </Box>
       </Paper>
 
       <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

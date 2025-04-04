@@ -1,0 +1,82 @@
+{
+  "pointValues": {
+    "challenge": {
+      "average": 1000,
+      "description": "Challenge gibt im Schnitt 1000 Punkte"
+    },
+    "transportation": {
+      "sBahn": {
+        "cost": 25,
+        "description": "S Bahnen kosten 25 P/m"
+      },
+      "interregio": {
+        "cost": 50,
+        "description": "Interregio kostet 50 P/m"
+      },
+      "bote": {
+        "cost": 10,
+        "description": "Bote 10P/m"
+      },
+      "bus": {
+        "cost": 15,
+        "description": "Bus 15P/m"
+      },
+      "tramMetro": {
+        "cost": 15,
+        "description": "Tram/Metro 15P/m"
+      },
+      "zweirad": {
+        "cost": 5,
+        "description": "Elektrische oder unmotorisierte Zweiräder. 5P/m"
+      }
+    },
+    "items": {
+      "degger": {
+        "cost": 250,
+        "description": "1 3/4 Degger 250P (Macht halt *2 bi next Challenge)"
+      },
+      "spotted": {
+        "cost": 420,
+        "description": "You have been spottet alla: 420P (Wüsse wo anderi bros sind (fänger))"
+      },
+      "woBinIch": {
+        "cost": 777,
+        "description": "Wo bin ich?: 777P (Macht dich für 10 minute unsichtbar (wo bin ich doch nicht))"
+      },
+      "richi": {
+        "cost": 1111,
+        "description": "RICHI: 1.111*10^3 (Du muesch din partner betouche und schreie richi muesch di guet häbe und debii das chaufe denne döfed sich d fänger nümm bewege (wenn ned i de nöchi, denn muess gfilmt ALLA))"
+      }
+    }
+  },
+  "rules": {
+    "goal": [
+      "Jede Gruppe/Person muss so nahe wie möglich an seinen Zielort kommen.",
+      "Wenn diese Gruppe/Person den Zielort erreicht, ist das Spiel beendet und diese Gruppe ist die Siegergruppe.",
+      "Falls eine Gegnergruppe über den Zielort der anderen Gruppe fährt, zählt das nicht als ein Sieg der Gruppe, die diesen Ort als Ziel hat.",
+      "Falls das Fertig ist ohne, dass eine Gruppe den Zielort erreicht hat, gewinnt die Gruppe bei der das Ziel der Rennergruppe als nächstes war. Beispiel: Gruppe zwei ist in der Zone von Gruppe eins. Das Spiel ist fertig. Somit gewinnt Gruppe eins."
+    ],
+    "gameFlow": [
+      "Start Sarnen. Eine gruppe beginnt (spinn Random irgendwasssss) diese hat 30min GracePeriod um zu flüchten.",
+      "Jedes Team bekommt zum Start 2000p",
+      "Nach 30 min dürfen die Hunter diese Jagen.",
+      "Wenn die Runners gefangen werden wechselt die Gruppe gemäss (rotationpaper)",
+      "Nun hat die Neue Runnergruppe wieder eine 30m GracePeriod."
+    ],
+    "duringGame": [
+      "Es dürfen keine Autostops gemacht werden.",
+      "Es müssen immer die Standorte eingeschalten sein. Währen dem Veto darf man sich nicht im Untergrund verstecken so das der Tracker verrückt spielt.",
+      "Jede Challenge die Gezogen wird muss entweder Ausgeführt oder Verworfen werden.",
+      "Es darf nicht betrogen werden selbst wenn der Zug 1m früher oder Später ankommt zählt die Fahrzeit gemäss SBB Mobile oder SBB Preview App.",
+      "Es daürfen nur Tools genutzt werden, die für alle zugänglich sind und keinen unfairen Vorteil gegenüber anderen verschaffen könnte.",
+      "Die flüchtende Gruppe darf sich nicht aufteilen um nicht gefangen zu werden.",
+      "Das mobile Endgerät, welches die GPS Daten aussendet muss immer am Mann sein.",
+      "Man darf nicht mehr als 20 Minuten (zu Fuss) das sind ca. 1.75km von einer ÖV Station entfernt sein, die an jetztigen Tag befahren wird. Ist dies nicht der Fall, gilt die Gruppe als gefangen und muss kein Mitglied der Renner berühren, wenn die Fänger im gleichen Dorf/Stadt sind. (Zählt nicht, wenn man in einem Transportmittel ist und die Zeit im Transportmittel noch nicht abgelaufen ist.)",
+      "Man gilt als gefangen, wenn ein Fänger ein Gruppenmitglied der Renner berührt.",
+      "Bei einem Veto muss man 30 Minuten warten bis man wieder Punkte ausgeben darf oder eine Challenge anfangen darf.",
+      "Wenn man Richi aktivieren möchte, muss man eine Person mindestens 10 Sekunden HÄBE (guet(also auflüpfen)) und JA RICHI schreien.",
+      "Man muss pro Tag ein Mal essen.",
+      "Die Zeitspanne in der das Spiel läuft ist 08:00 - 19:00 UTC+1. Am letzten Tag geht diese bis 15:00 UTC+1"
+    ]
+  }
+}

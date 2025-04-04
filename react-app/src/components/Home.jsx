@@ -19,6 +19,7 @@ import {
   ShoppingCart as ShopIcon,
   Inventory as InventoryIcon
 } from '@mui/icons-material';
+import GameRules from './GameRules';
 import { useAuth } from '../contexts/AuthContext';
 import challengeService from '../services/challengeService';
 import transportationService from '../services/transportationService';
@@ -141,8 +142,6 @@ const Home = () => {
         setLoading(prev => ({ ...prev, userItems: false }));
       }
       
-      // We no longer need to fetch shop items for preview
-      // Instead, we'll just show all user's purchased items
     };
 
     fetchData();
@@ -304,6 +303,9 @@ const Home = () => {
               Here's an overview of your current activity.
             </Typography>
           </Box>
+        </Box>
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', width: '100%' }}>
+          <GameRules />
         </Box>
       </Paper>
 
