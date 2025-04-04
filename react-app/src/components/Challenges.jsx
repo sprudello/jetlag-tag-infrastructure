@@ -24,6 +24,7 @@ import {
   ListItemIcon,
   ListItemText
 } from '@mui/material';
+import API_CONFIG from '../config/apiConfig';
 import { 
   EmojiEvents as ChallengeIcon,
   FlashOn as MultiplierIcon,
@@ -56,6 +57,9 @@ const Challenges = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [showMultiplierMenu, setShowMultiplierMenu] = useState(false);
 
+  const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
+  const [hasActivePenalty, setHasActivePenalty] = useState(false);
+  
   useEffect(() => {
     const fetchChallenges = async () => {
       try {
@@ -65,6 +69,76 @@ const Challenges = () => {
         setError('Failed to load challenges: ' + err.message);
       } finally {
         setLoading(false);
+      }
+    };
+    
+    // Check if user has an active challenge
+    const checkActiveChallenge = async () => {
+      try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/api/UserChallenges/currentChallenge/${currentUser.userId}`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser.token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.activeChallenge) {
+            setHasActiveChallenge(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking active challenge:", err);
+      }
+    };
+    
+    // Check if user has an active penalty
+    const checkActivePenalty = () => {
+      // Check localStorage first
+      const storedPenalty = localStorage.getItem(`penalty_${currentUser.userId}`);
+      if (storedPenalty) {
+        try {
+          const penaltyData = JSON.parse(storedPenalty);
+          const endTime = new Date(penaltyData.endTime);
+          
+          // Only set the penalty if it hasn't expired yet
+          if (endTime > new Date()) {
+            setHasActivePenalty(true);
+            return;
+          } else {
+            // Clear expired penalty
+            localStorage.removeItem(`penalty_${currentUser.userId}`);
+          }
+        } catch (e) {
+          console.error("Error parsing stored penalty:", e);
+        }
+      }
+      
+      // If no local penalty, check the API
+      try {
+        fetch(`${API_CONFIG.BASE_URL}/api/UserPenalties/active/${currentUser.userId}`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser.token}`
+          }
+        }).then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          return { hasActivePenalty: false };
+        }).then(data => {
+          if (data.hasActivePenalty) {
+            setHasActivePenalty(true);
+            
+            // Store in localStorage for persistence
+            const penalty = {
+              endTime: new Date(data.endTime),
+              durationInMinutes: data.durationInMinutes
+            };
+            localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
+          }
+        });
+      } catch (err) {
+        console.error("Error checking active penalty:", err);
       }
     };
 
@@ -99,12 +173,32 @@ const Challenges = () => {
     if (currentUser?.token) {
       fetchChallenges();
       fetchUserItems();
+      checkActiveChallenge();
+      checkActivePenalty();
     }
   }, [currentUser]);
   
   // Removed hasActiveChallenge state
 
   const handleCardClick = () => {
+    if (hasActivePenalty) {
+      setNotification({
+        open: true,
+        message: 'You have an active penalty. You cannot draw a challenge until the penalty expires.',
+        severity: 'warning'
+      });
+      return;
+    }
+    
+    if (hasActiveChallenge) {
+      setNotification({
+        open: true,
+        message: 'You already have an active challenge. Complete it first!',
+        severity: 'warning'
+      });
+      return;
+    }
+    
     if (!cardFlipped) {
       // Show loading animation before revealing the challenge
       setLoading(true);
@@ -197,10 +291,19 @@ const Challenges = () => {
         severity: 'success'
       });
       
-      // Challenge vetoed
+      // In a real app, we would remove the veto item from the user's inventory here
+      // For now, we'll just simulate it by removing it from the local state
+      const vetoItem = vetoItems[0];
+      setVetoItems(vetoItems.filter(item => item.id !== vetoItem.id));
+      setUserItems(userItems.filter(item => item.id !== vetoItem.id));
+      
     } else {
       // Apply penalty for vetoing without a veto item
-      handleCompleteFail();
+      setNotification({
+        open: true,
+        message: 'You don\'t have a veto item! Drawing a new challenge instead.',
+        severity: 'warning'
+      });
     }
     
     // Reset the card
@@ -334,13 +437,35 @@ const Challenges = () => {
               Click the card to draw a random challenge
             </Typography>
             
-            {currentMultiplier > 1 && (
+            {currentMultiplier > 1 ? (
               <Chip 
                 icon={<MultiplierIcon />}
                 label={`${currentMultiplier}x Multiplier Active`}
                 color="secondary"
                 sx={{ mb: 2 }}
               />
+            ) : multiplierItems.length > 0 && !cardFlipped && !hasActiveChallenge && !hasActivePenalty && (
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<MultiplierIcon />}
+                onClick={handleOpenMultiplierMenu}
+                sx={{ mb: 2 }}
+              >
+                Use Multiplier
+              </Button>
+            )}
+            
+            {hasActiveChallenge && (
+              <Alert severity="warning" sx={{ mb: 2, maxWidth: 400 }}>
+                You already have an active challenge. Complete it before drawing a new one.
+              </Alert>
+            )}
+            
+            {hasActivePenalty && (
+              <Alert severity="error" sx={{ mb: 2, maxWidth: 400 }}>
+                You have an active penalty. You cannot draw a challenge until the penalty expires.
+              </Alert>
             )}
             
             <Box className="challenge-card-container" sx={{ mb: 4 }}>
@@ -449,27 +574,25 @@ const Challenges = () => {
                             color="primary"
                             sx={{ fontWeight: 'bold' }}
                           />
-                          {multiplierItems.length > 0 && (
-                            <Button
-                              startIcon={<MultiplierIcon />}
-                              onClick={handleOpenMultiplierMenu}
+                          {currentMultiplier > 1 && (
+                            <Chip 
+                              icon={<MultiplierIcon />}
+                              label={`${currentMultiplier}x Multiplier Active`}
                               color="secondary"
-                              variant="outlined"
                               size="small"
                               sx={{ fontWeight: 'bold' }}
-                            >
-                              Apply Multiplier
-                            </Button>
+                            />
                           )}
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
                           <Button 
-                            variant="outlined" 
+                            variant={vetoItems.length > 0 ? "contained" : "outlined"}
                             color="error"
                             onClick={handleVetoChallenge}
                             sx={{ fontWeight: 'bold' }}
+                            startIcon={vetoItems.length > 0 ? <VetoIcon /> : null}
                           >
-                            Veto
+                            {vetoItems.length > 0 ? "Use Veto Item" : "Skip"}
                           </Button>
                           <Button 
                             variant="contained" 

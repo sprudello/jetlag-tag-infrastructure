@@ -16,7 +16,8 @@ import {
   EmojiEvents as ChallengeIcon,
   DirectionsCar as TransportIcon,
   ShoppingCart as ShopIcon,
-  MonetizationOn as CurrencyIcon
+  MonetizationOn as CurrencyIcon,
+  Timer as TimerIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import userService from '../services/userService';
@@ -31,6 +32,8 @@ const Profile = () => {
   const [challengeStats, setChallengeStats] = useState({ successCount: 0, failedCount: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activePenalty, setActivePenalty] = useState(null);
+  const [penaltyTimeRemaining, setPenaltyTimeRemaining] = useState(null);
 
   const [userItems, setUserItems] = useState([]);
   const [activeChallenge, setActiveChallenge] = useState(null);
@@ -47,6 +50,55 @@ const Profile = () => {
             currency: user.currency,
             isAdmin: user.isAdmin
           });
+          
+          // Check for active penalty in localStorage first
+          const storedPenalty = localStorage.getItem(`penalty_${currentUser.userId}`);
+          if (storedPenalty) {
+            try {
+              const penaltyData = JSON.parse(storedPenalty);
+              const endTime = new Date(penaltyData.endTime);
+          
+              // Only set the penalty if it hasn't expired yet
+              if (endTime > new Date()) {
+                setActivePenalty({
+                  endTime: endTime,
+                  durationInMinutes: penaltyData.durationInMinutes
+                });
+              } else {
+                // Clear expired penalty
+                localStorage.removeItem(`penalty_${currentUser.userId}`);
+              }
+            } catch (e) {
+              console.error("Error parsing stored penalty:", e);
+            }
+          }
+      
+          // If no local penalty, check the API
+          if (!activePenalty) {
+            try {
+              const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/api/UserPenalties/active/${currentUser.userId}`, {
+                headers: {
+                  'Authorization': `Bearer ${currentUser.token}`
+                }
+              });
+          
+              if (penaltyResponse.ok) {
+                const penaltyData = await penaltyResponse.json();
+                if (penaltyData.hasActivePenalty) {
+                  const penalty = {
+                    endTime: new Date(penaltyData.endTime),
+                    durationInMinutes: penaltyData.durationInMinutes
+                  };
+                  setActivePenalty(penalty);
+              
+                  // Store in localStorage for persistence
+                  localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
+                }
+              }
+            } catch (penaltyErr) {
+              console.error('Error fetching active penalty:', penaltyErr);
+            }
+          }
           
           // Get challenge statistics
           try {
@@ -153,6 +205,48 @@ const Profile = () => {
 
     fetchUserData();
   }, [currentUser]);
+  
+  // Update penalty timer
+  useEffect(() => {
+    if (!activePenalty) {
+      setPenaltyTimeRemaining(null);
+      return;
+    }
+    
+    const updateRemainingTime = () => {
+      const now = new Date();
+      const endTime = new Date(activePenalty.endTime);
+      const diffMs = endTime - now;
+      
+      if (diffMs <= 0) {
+        // Penalty has expired
+        setActivePenalty(null);
+        setPenaltyTimeRemaining(null);
+        
+        // Clear from localStorage when expired
+        localStorage.removeItem(`penalty_${currentUser?.userId}`);
+        return;
+      }
+      
+      // Calculate remaining time in minutes and seconds
+      const diffMinutes = Math.floor(diffMs / 60000);
+      const diffSeconds = Math.floor((diffMs % 60000) / 1000);
+      
+      setPenaltyTimeRemaining({
+        minutes: diffMinutes,
+        seconds: diffSeconds,
+        total: diffMs
+      });
+    };
+    
+    // Update immediately
+    updateRemainingTime();
+    
+    // Then update every second
+    const timerId = setInterval(updateRemainingTime, 1000);
+    
+    return () => clearInterval(timerId);
+  }, [activePenalty, currentUser]);
 
   if (loading) {
     return (
@@ -202,6 +296,28 @@ const Profile = () => {
                 {userData?.currency} coins
               </Typography>
             </Box>
+            
+            {penaltyTimeRemaining && (
+              <Box 
+                sx={{ 
+                  mt: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  color: 'error.main',
+                  animation: 'pulse 2s infinite',
+                  '@keyframes pulse': {
+                    '0%': { opacity: 0.7 },
+                    '50%': { opacity: 1 },
+                    '100%': { opacity: 0.7 }
+                  }
+                }}
+              >
+                <TimerIcon color="error" sx={{ mr: 1 }} />
+                <Typography variant="body1" fontWeight="bold" color="error.main">
+                  Penalty: {penaltyTimeRemaining.minutes}:{penaltyTimeRemaining.seconds.toString().padStart(2, '0')} remaining
+                </Typography>
+              </Box>
+            )}
           </Box>
         </Box>
 

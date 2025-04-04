@@ -11,13 +11,20 @@ import {
   Chip,
   Divider,
   CircularProgress,
-  Avatar
+  Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { 
   EmojiEvents as ChallengeIcon,
   DirectionsCar as TransportIcon,
   ShoppingCart as ShopIcon,
-  Inventory as InventoryIcon
+  Inventory as InventoryIcon,
+  Timer as TimerIcon
 } from '@mui/icons-material';
 import GameRules from './GameRules';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,10 +53,62 @@ const Home = () => {
     shopItems: null,
     userItems: null
   });
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
+  const [activePenalty, setActivePenalty] = useState(null);
+  const [penaltyTimeRemaining, setPenaltyTimeRemaining] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!currentUser?.token) return;
+      
+      // Check for active penalty in localStorage first
+      const storedPenalty = localStorage.getItem(`penalty_${currentUser.userId}`);
+      if (storedPenalty) {
+        try {
+          const penaltyData = JSON.parse(storedPenalty);
+          const endTime = new Date(penaltyData.endTime);
+          
+          // Only set the penalty if it hasn't expired yet
+          if (endTime > new Date()) {
+            setActivePenalty({
+              endTime: endTime,
+              durationInMinutes: penaltyData.durationInMinutes
+            });
+          } else {
+            // Clear expired penalty
+            localStorage.removeItem(`penalty_${currentUser.userId}`);
+          }
+        } catch (e) {
+          console.error("Error parsing stored penalty:", e);
+        }
+      }
+      
+      // If no local penalty, check the API
+      if (!activePenalty) {
+        try {
+          const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/api/UserPenalties/active/${currentUser.userId}`, {
+            headers: {
+              'Authorization': `Bearer ${currentUser.token}`
+            }
+          });
+          
+          if (penaltyResponse.ok) {
+            const penaltyData = await penaltyResponse.json();
+            if (penaltyData.hasActivePenalty) {
+              const penalty = {
+                endTime: new Date(penaltyData.endTime),
+                durationInMinutes: penaltyData.durationInMinutes
+              };
+              setActivePenalty(penalty);
+              
+              // Store in localStorage for persistence
+              localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching active penalty:", err);
+        }
+      }
       
       // Fetch user's active challenge
       try {
@@ -146,6 +205,48 @@ const Home = () => {
 
     fetchData();
   }, [currentUser]);
+  
+  // Update penalty timer
+  useEffect(() => {
+    if (!activePenalty) {
+      setPenaltyTimeRemaining(null);
+      return;
+    }
+    
+    const updateRemainingTime = () => {
+      const now = new Date();
+      const endTime = new Date(activePenalty.endTime);
+      const diffMs = endTime - now;
+      
+      if (diffMs <= 0) {
+        // Penalty has expired
+        setActivePenalty(null);
+        setPenaltyTimeRemaining(null);
+        
+        // Clear from localStorage when expired
+        localStorage.removeItem(`penalty_${currentUser?.userId}`);
+        return;
+      }
+      
+      // Calculate remaining time in minutes and seconds
+      const diffMinutes = Math.floor(diffMs / 60000);
+      const diffSeconds = Math.floor((diffMs % 60000) / 1000);
+      
+      setPenaltyTimeRemaining({
+        minutes: diffMinutes,
+        seconds: diffSeconds,
+        total: diffMs
+      });
+    };
+    
+    // Update immediately
+    updateRemainingTime();
+    
+    // Then update every second
+    const timerId = setInterval(updateRemainingTime, 1000);
+    
+    return () => clearInterval(timerId);
+  }, [activePenalty, currentUser]);
 
   const renderSection = (title, icon, items, loadingState, errorState, itemRenderer) => (
     <Box className="home-section">
@@ -177,6 +278,155 @@ const Home = () => {
     </Box>
   );
 
+  const [openChallengeDialog, setOpenChallengeDialog] = useState(false);
+  const [selectedChallenge, setSelectedChallenge] = useState(null);
+  const [challengeActionLoading, setChallengeActionLoading] = useState(false);
+  
+  const handleOpenChallengeDetails = (challenge) => {
+    setSelectedChallenge(challenge);
+    setOpenChallengeDialog(true);
+  };
+  
+  const handleCloseChallengeDetails = () => {
+    setOpenChallengeDialog(false);
+  };
+  
+  const handleChallengeComplete = async () => {
+    try {
+      setChallengeActionLoading(true);
+      
+      // Create the request data
+      const requestData = {
+        userId: currentUser.userId,
+        userChallengeId: selectedChallenge.userChallengeId
+      };
+      
+      // Call the API endpoint to mark challenge as successful
+      const response = await fetch(`${API_CONFIG.BASE_URL}/success`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentUser.token}`
+        },
+        body: JSON.stringify(requestData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to complete challenge');
+      }
+      
+      const result = await response.json();
+      
+      setNotification({
+        open: true,
+        message: `Challenge completed successfully! ${selectedChallenge.reward} coins added to your account.`,
+        severity: 'success'
+      });
+      
+      // Close dialog and refresh data
+      setOpenChallengeDialog(false);
+      setChallenges([]);
+      
+      // Navigate to challenges page after a short delay
+      setTimeout(() => {
+        window.location.href = '/challenges';
+      }, 1500);
+      
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error completing challenge: ${err.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setChallengeActionLoading(false);
+    }
+  };
+  
+  const handleChallengeFail = async () => {
+    try {
+      setChallengeActionLoading(true);
+      
+      // Create the request data
+      const requestData = {
+        userId: currentUser.userId,
+        userChallengeId: selectedChallenge.userChallengeId
+      };
+      
+      // Set the penalty locally first
+      const penaltyEndTime = new Date();
+      penaltyEndTime.setMinutes(penaltyEndTime.getMinutes() + 30); // Standard 30-minute penalty
+      
+      // Store the penalty in localStorage for persistence
+      const penaltyData = {
+        endTime: penaltyEndTime.toISOString(),
+        durationInMinutes: 30
+      };
+      localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penaltyData));
+      
+      // Set the active penalty state
+      setActivePenalty(penaltyData);
+      
+      // Call the API endpoint to mark challenge as failed
+      const response = await fetch(`${API_CONFIG.BASE_URL}/fail`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentUser.token}`
+        },
+        body: JSON.stringify(requestData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to report challenge failure');
+      }
+      
+      // Update the penalty in the database
+      try {
+        const penaltyUpdateResponse = await fetch(`${API_CONFIG.BASE_URL}/api/Penalty`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentUser.token}`
+          },
+          body: JSON.stringify({ durationInMinutes: 30 })
+        });
+        
+        if (!penaltyUpdateResponse.ok) {
+          console.error('Failed to update penalty in database');
+        }
+      } catch (penaltyErr) {
+        console.error('Error updating penalty:', penaltyErr);
+      }
+      
+      setNotification({
+        open: true,
+        message: 'Challenge failed. A 30-minute penalty has been applied.',
+        severity: 'warning'
+      });
+      
+      // Close dialog and refresh data
+      setOpenChallengeDialog(false);
+      setChallenges([]);
+      
+      // Navigate to challenges page after a short delay
+      setTimeout(() => {
+        window.location.href = '/challenges';
+      }, 1500);
+      
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: `Error reporting challenge failure: ${err.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setChallengeActionLoading(false);
+    }
+  };
+  
   const renderChallengeItem = (challenge) => (
     <Grid item xs={12} md={4} key={challenge.id}>
       <Card className="item-card challenge-card">
@@ -195,7 +445,11 @@ const Home = () => {
           />
         </CardContent>
         <CardActions>
-          <Button size="small" color="primary">
+          <Button 
+            size="small" 
+            color="primary"
+            onClick={() => handleOpenChallengeDetails(challenge)}
+          >
             View Details
           </Button>
         </CardActions>
@@ -302,6 +556,28 @@ const Home = () => {
             <Typography variant="body1">
               Here's an overview of your current activity.
             </Typography>
+            
+            {penaltyTimeRemaining && (
+              <Box 
+                sx={{ 
+                  mt: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  color: 'error.main',
+                  animation: 'pulse 2s infinite',
+                  '@keyframes pulse': {
+                    '0%': { opacity: 0.7 },
+                    '50%': { opacity: 1 },
+                    '100%': { opacity: 0.7 }
+                  }
+                }}
+              >
+                <TimerIcon color="error" sx={{ mr: 1 }} />
+                <Typography variant="body1" fontWeight="bold" color="error.main">
+                  Penalty: {penaltyTimeRemaining.minutes}:{penaltyTimeRemaining.seconds.toString().padStart(2, '0')} remaining
+                </Typography>
+              </Box>
+            )}
           </Box>
         </Box>
         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', width: '100%' }}>
@@ -347,6 +623,94 @@ const Home = () => {
         error.userItems, 
         renderUserItemItem
       )}
+      
+      {/* Challenge Details Dialog */}
+      <Dialog
+        open={openChallengeDialog}
+        onClose={handleCloseChallengeDetails}
+        maxWidth="sm"
+        fullWidth
+      >
+        {selectedChallenge && (
+          <>
+            <DialogTitle sx={{ 
+              bgcolor: 'primary.dark', 
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              <ChallengeIcon sx={{ mr: 1 }} />
+              {selectedChallenge.title}
+            </DialogTitle>
+            <DialogContent sx={{ py: 3 }}>
+              <Typography variant="body1" paragraph>
+                {selectedChallenge.description}
+              </Typography>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                <Chip 
+                  label={`Reward: ${selectedChallenge.reward} coins`} 
+                  color="primary" 
+                  size="medium"
+                  sx={{ fontWeight: 'bold' }}
+                />
+                
+                <Typography variant="body2" color="text.secondary">
+                  Started: {new Date(selectedChallenge.startTime).toLocaleString()}
+                </Typography>
+              </Box>
+              
+              <Divider sx={{ my: 3 }} />
+              
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+                Have you completed this challenge?
+              </Typography>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                <Button 
+                  variant="contained" 
+                  color="error"
+                  size="large"
+                  onClick={handleChallengeFail}
+                  disabled={challengeActionLoading}
+                  startIcon={challengeActionLoading ? <CircularProgress size={20} /> : null}
+                  sx={{ width: '48%' }}
+                >
+                  Failed
+                </Button>
+                
+                <Button 
+                  variant="contained" 
+                  color="success"
+                  size="large"
+                  onClick={handleChallengeComplete}
+                  disabled={challengeActionLoading}
+                  startIcon={challengeActionLoading ? <CircularProgress size={20} /> : null}
+                  sx={{ width: '48%' }}
+                >
+                  Completed
+                </Button>
+              </Box>
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
+      
+      {/* Notification Snackbar */}
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={() => setNotification({ ...notification, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setNotification({ ...notification, open: false })} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
