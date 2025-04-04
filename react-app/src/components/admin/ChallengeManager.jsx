@@ -33,7 +33,8 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon
+  VisibilityOff as VisibilityOffIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 
 const ChallengeManager = () => {
@@ -223,10 +224,44 @@ const ChallengeManager = () => {
     setNotification({ ...notification, open: false });
   };
   
+  // Auto-hide info notifications after 5 seconds
+  useEffect(() => {
+    if (notification.open && notification.autoHide) {
+      const timer = setTimeout(() => {
+        setNotification({ ...notification, open: false });
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+  
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">Challenge Management</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography variant="h5">Challenge Management</Typography>
+          <IconButton 
+            size="small" 
+            color="info" 
+            sx={{ ml: 1 }}
+            onClick={() => {
+              const examples = [
+                "Challenge gibt im Schnitt 1000 Punkte",
+                "Challenges können Multiplier-Effekte haben",
+                "Challenges können verschiedene Schwierigkeitsgrade haben"
+              ];
+              const randomExample = examples[Math.floor(Math.random() * examples.length)];
+              setNotification({
+                open: true,
+                message: randomExample,
+                severity: "info",
+                autoHide: true
+              });
+            }}
+          >
+            <InfoIcon fontSize="small" />
+          </IconButton>
+        </Box>
         <Button 
           variant="contained" 
           color="primary" 

@@ -38,7 +38,8 @@ import {
   Train as TrainIcon,
   LocalTaxi as TaxiIcon,
   DirectionsBike as BikeIcon,
-  DirectionsWalk as WalkIcon
+  DirectionsWalk as WalkIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 
 const TransportationManager = () => {
@@ -271,10 +272,47 @@ const TransportationManager = () => {
     setNotification({ ...notification, open: false });
   };
   
+  // Auto-hide info notifications after 5 seconds
+  useEffect(() => {
+    if (notification.open && notification.autoHide) {
+      const timer = setTimeout(() => {
+        setNotification({ ...notification, open: false });
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+  
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">Transportation Management</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography variant="h5">Transportation Management</Typography>
+          <IconButton 
+            size="small" 
+            color="info" 
+            sx={{ ml: 1 }}
+            onClick={() => {
+              const examples = [
+                "S Bahnen kosten 25 P/m",
+                "Interregio kostet 50 P/m",
+                "Bote 10P/m",
+                "Bus 15P/m",
+                "Tram/Metro 15P/m",
+                "Elektrische oder unmotorisierte Zweiräder 5P/m"
+              ];
+              const randomExample = examples[Math.floor(Math.random() * examples.length)];
+              setNotification({
+                open: true,
+                message: randomExample,
+                severity: "info",
+                autoHide: true
+              });
+            }}
+          >
+            <InfoIcon fontSize="small" />
+          </IconButton>
+        </Box>
         <Button 
           variant="contained" 
           color="primary" 

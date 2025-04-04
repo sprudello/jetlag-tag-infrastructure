@@ -35,7 +35,8 @@ import {
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
-  FlashOn as PowerUpIcon
+  FlashOn as PowerUpIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 
 const ShopItemManager = () => {
@@ -274,6 +275,17 @@ const ShopItemManager = () => {
     setNotification({ ...notification, open: false });
   };
   
+  // Auto-hide info notifications after 5 seconds
+  useEffect(() => {
+    if (notification.open && notification.autoHide) {
+      const timer = setTimeout(() => {
+        setNotification({ ...notification, open: false });
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+  
   const renderShopItemsTable = () => (
     <TableContainer component={Paper}>
       <Table>
@@ -316,7 +328,31 @@ const ShopItemManager = () => {
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">Shop Item Management</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography variant="h5">Shop Item Management</Typography>
+          <IconButton 
+            size="small" 
+            color="info" 
+            sx={{ ml: 1 }}
+            onClick={() => {
+              const examples = [
+                "1 3/4 Degger 250P (Macht halt *2 bi next Challenge)",
+                "You have been spottet alla: 420P (Wüsse wo anderi bros sind)",
+                "Wo bin ich?: 777P (Macht dich für 10 minute unsichtbar)",
+                "RICHI: 1.111*10^3 (Du muesch din partner betouche und schreie richi)"
+              ];
+              const randomExample = examples[Math.floor(Math.random() * examples.length)];
+              setNotification({
+                open: true,
+                message: randomExample,
+                severity: "info",
+                autoHide: true
+              });
+            }}
+          >
+            <InfoIcon fontSize="small" />
+          </IconButton>
+        </Box>
         <Button 
           variant="contained" 
           color="primary" 
