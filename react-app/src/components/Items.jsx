@@ -49,10 +49,13 @@ const Items = () => {
   const handleBuyItem = async (itemId) => {
     try {
       setLoading(true);
+      // Make sure we're sending exactly what the API expects
       const purchaseData = {
-        userId: currentUser.userId,
-        itemId: itemId
+        userId: parseInt(currentUser.userId),
+        itemId: parseInt(itemId)
       };
+      
+      console.log("Sending purchase data:", purchaseData);
       
       const result = await itemService.buyItem(purchaseData, currentUser?.token);
       
@@ -66,6 +69,7 @@ const Items = () => {
       // This would typically be handled by refreshing the user data
       
     } catch (err) {
+      console.error("Purchase error details:", err);
       setNotification({
         open: true,
         message: `Purchase failed: ${err.message}`,

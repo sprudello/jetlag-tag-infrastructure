@@ -106,7 +106,27 @@ const itemService = {
    * @returns {Promise<Object>} - Purchase result
    */
   buyItem: async (purchaseData, token) => {
-    return await apiService.post('/api/UserItems/buy', purchaseData, token);
+    try {
+      const response = await fetch(`${API_URL}/api/UserItems/buy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(purchaseData)
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Buy item error response:', errorText);
+        throw new Error(errorText || 'Failed to purchase item');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Buy item error:', error);
+      throw error;
+    }
   }
 };
 

@@ -211,6 +211,11 @@ const Challenges = () => {
           const challenge = challenges[randomIndex];
           setRandomChallenge(challenge);
           setCardFlipped(true);
+          
+          // Automatically accept the challenge after a short delay
+          setTimeout(() => {
+            handleAcceptChallenge(challenge);
+          }, 2000);
         } else {
           // If no challenges are available, show notification
           setCardFlipped(false);
@@ -584,24 +589,11 @@ const Challenges = () => {
                             />
                           )}
                         </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                          <Button 
-                            variant={vetoItems.length > 0 ? "contained" : "outlined"}
-                            color="error"
-                            onClick={handleVetoChallenge}
-                            sx={{ fontWeight: 'bold' }}
-                            startIcon={vetoItems.length > 0 ? <VetoIcon /> : null}
-                          >
-                            {vetoItems.length > 0 ? "Use Veto Item" : "Skip"}
-                          </Button>
-                          <Button 
-                            variant="contained" 
-                            color="primary"
-                            onClick={() => handleAcceptChallenge(randomChallenge)}
-                            sx={{ fontWeight: 'bold' }}
-                          >
-                            Accept
-                          </Button>
+                        {/* Buttons removed - challenge is automatically accepted when drawn */}
+                        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                          <Typography variant="body2" color="text.secondary">
+                            Challenge will be automatically accepted
+                          </Typography>
                         </Box>
                       </>
                     )}

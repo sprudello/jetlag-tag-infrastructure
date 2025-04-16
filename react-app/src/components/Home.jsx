@@ -24,7 +24,8 @@ import {
   DirectionsCar as TransportIcon,
   ShoppingCart as ShopIcon,
   Inventory as InventoryIcon,
-  Timer as TimerIcon
+  Timer as TimerIcon,
+  Block as VetoIcon
 } from '@mui/icons-material';
 import GameRules from './GameRules';
 import { useAuth } from '../contexts/AuthContext';
@@ -41,6 +42,7 @@ const Home = () => {
   const [transportations, setTransportations] = useState([]);
   const [shopItems, setShopItems] = useState([]);
   const [userItems, setUserItems] = useState([]);
+  const [vetoItems, setVetoItems] = useState([]);
   const [loading, setLoading] = useState({
     challenges: true,
     transportations: true,
@@ -167,10 +169,10 @@ const Home = () => {
         // For now, we'll simulate user-specific purchased items based on user ID
         // This ensures different users see different items
         const userId = currentUser.userId || 0;
-        
+          
         // Generate user-specific items based on user ID
         const userSpecificItems = [];
-        
+          
         // Only add items if they "belong" to this user (based on user ID)
         if (userId % 2 === 0) { // Even user IDs get multiplier
           userSpecificItems.push({ 
@@ -179,10 +181,11 @@ const Home = () => {
             description: "Doubles your challenge rewards", 
             price: 200, 
             isActive: true,
+            type: "multiplier",
             userId: userId
           });
         }
-        
+          
         if (userId % 3 === 0) { // User IDs divisible by 3 get veto
           userSpecificItems.push({ 
             id: 2, 
@@ -190,11 +193,14 @@ const Home = () => {
             description: "Skip a challenge without penalty", 
             price: 300, 
             isActive: true,
+            type: "veto",
             userId: userId
           });
         }
-        
+          
         setUserItems(userSpecificItems);
+        // Filter out veto items
+        setVetoItems(userSpecificItems.filter(item => item.type === "veto"));
       } catch (err) {
         setError(prev => ({ ...prev, userItems: 'Failed to load user items: ' + err.message }));
       } finally {
@@ -341,6 +347,33 @@ const Home = () => {
       });
     } finally {
       setChallengeActionLoading(false);
+    }
+  };
+  
+  const handleVetoChallenge = () => {
+    // Check if user has veto items
+    if (vetoItems.length > 0) {
+      // Use a veto item without penalty
+      setNotification({
+        open: true,
+        message: 'Challenge vetoed successfully! No penalty applied.',
+        severity: 'success'
+      });
+      
+      // In a real app, we would remove the veto item from the user's inventory here
+      // For now, we'll just simulate it by removing it from the local state
+      const vetoItem = vetoItems[0];
+      setVetoItems(vetoItems.filter(item => item.id !== vetoItem.id));
+      setUserItems(userItems.filter(item => item.id !== vetoItem.id));
+      
+      // Close dialog and redirect to challenges page
+      setOpenChallengeDialog(false);
+      setChallenges([]);
+      
+      // Navigate to challenges page after a short delay
+      setTimeout(() => {
+        window.location.href = '/challenges';
+      }, 1500);
     }
   };
   
@@ -526,11 +559,6 @@ const Home = () => {
             sx={{ mt: 2 }} 
           />
         </CardContent>
-        <CardActions>
-          <Button size="small" color="success">
-            Use Item
-          </Button>
-        </CardActions>
       </Card>
     </Grid>
   );
@@ -667,6 +695,20 @@ const Home = () => {
               </Typography>
               
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                {vetoItems.length > 0 && (
+                  <Button 
+                    variant="contained" 
+                    color="warning"
+                    size="large"
+                    onClick={handleVetoChallenge}
+                    disabled={challengeActionLoading}
+                    startIcon={challengeActionLoading ? <CircularProgress size={20} /> : <VetoIcon />}
+                    sx={{ width: '32%' }}
+                  >
+                    Veto
+                  </Button>
+                )}
+                
                 <Button 
                   variant="contained" 
                   color="error"
@@ -674,7 +716,7 @@ const Home = () => {
                   onClick={handleChallengeFail}
                   disabled={challengeActionLoading}
                   startIcon={challengeActionLoading ? <CircularProgress size={20} /> : null}
-                  sx={{ width: '48%' }}
+                  sx={{ width: vetoItems.length > 0 ? '32%' : '48%' }}
                 >
                   Failed
                 </Button>
@@ -686,7 +728,7 @@ const Home = () => {
                   onClick={handleChallengeComplete}
                   disabled={challengeActionLoading}
                   startIcon={challengeActionLoading ? <CircularProgress size={20} /> : null}
-                  sx={{ width: '48%' }}
+                  sx={{ width: vetoItems.length > 0 ? '32%' : '48%' }}
                 >
                   Completed
                 </Button>
