@@ -566,50 +566,52 @@ const Home = () => {
   return (
     <Box className="home-container">
       <Paper elevation={2} className="welcome-section">
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar 
-            sx={{ 
-              width: 60, 
-              height: 60, 
-              bgcolor: currentUser?.isAdmin ? 'secondary.main' : 'primary.main',
-              fontSize: '1.5rem'
-            }}
-          >
-            {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
-          </Avatar>
-          <Box>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Welcome, {currentUser?.username || 'User'}!
-            </Typography>
-            <Typography variant="body1">
-              Here's an overview of your current activity.
-            </Typography>
-            
-            {penaltyTimeRemaining && (
-              <Box 
-                sx={{ 
-                  mt: 1, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  color: 'error.main',
-                  animation: 'pulse 2s infinite',
-                  '@keyframes pulse': {
-                    '0%': { opacity: 0.7 },
-                    '50%': { opacity: 1 },
-                    '100%': { opacity: 0.7 }
-                  }
-                }}
-              >
-                <TimerIcon color="error" sx={{ mr: 1 }} />
-                <Typography variant="body1" fontWeight="bold" color="error.main">
-                  Penalty: {penaltyTimeRemaining.minutes}:{penaltyTimeRemaining.seconds.toString().padStart(2, '0')} remaining
-                </Typography>
-              </Box>
-            )}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Avatar 
+              sx={{ 
+                width: 60, 
+                height: 60, 
+                bgcolor: currentUser?.isAdmin ? 'secondary.main' : 'primary.main',
+                fontSize: '1.5rem'
+              }}
+            >
+              {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
+            </Avatar>
+            <Box>
+              <Typography variant="h4" component="h1" gutterBottom>
+                Welcome, {currentUser?.username || 'User'}!
+              </Typography>
+              <Typography variant="body1">
+                Here's an overview of your current activity.
+              </Typography>
+              
+              {penaltyTimeRemaining && (
+                <Box 
+                  sx={{ 
+                    mt: 1, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    color: 'error.main',
+                    animation: 'pulse 2s infinite',
+                    '@keyframes pulse': {
+                      '0%': { opacity: 0.7 },
+                      '50%': { opacity: 1 },
+                      '100%': { opacity: 0.7 }
+                    }
+                  }}
+                >
+                  <TimerIcon color="error" sx={{ mr: 1 }} />
+                  <Typography variant="body1" fontWeight="bold" color="error.main">
+                    Penalty: {penaltyTimeRemaining.minutes}:{penaltyTimeRemaining.seconds.toString().padStart(2, '0')} remaining
+                  </Typography>
+                </Box>
+              )}
+            </Box>
           </Box>
-        </Box>
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center', width: '100%' }}>
-          <GameRules />
+          <Box>
+            <GameRules />
+          </Box>
         </Box>
       </Paper>
 
