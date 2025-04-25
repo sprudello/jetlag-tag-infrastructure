@@ -16,6 +16,7 @@ import {
   Timer as PenaltyIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import API_CONFIG from '../../config/apiConfig';
 import '../../styles/components/admin/admin-dashboard.scss';
 
 const AdminDashboard = () => {
@@ -29,7 +30,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = 'http://localhost:5296'; // TODO: Replace with API_CONFIG.BASE_URL
+  const API_URL = API_CONFIG.BASE_URL;
 
   useEffect(() => {
     const fetchStats = async () => {
