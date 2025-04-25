@@ -75,7 +75,7 @@ const Challenges = () => {
     // Check if user has an active challenge
     const checkActiveChallenge = async () => {
       try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/api/UserChallenges/currentChallenge/${currentUser.userId}`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
           headers: {
             'Authorization': `Bearer ${currentUser.token}`
           }
@@ -85,10 +85,15 @@ const Challenges = () => {
           const data = await response.json();
           if (data.activeChallenge) {
             setHasActiveChallenge(true);
+            return;
           }
         }
+        
+        // If we get here, user has no active challenge
+        setHasActiveChallenge(false);
       } catch (err) {
         console.error("Error checking active challenge:", err);
+        setHasActiveChallenge(false);
       }
     };
     
@@ -116,7 +121,7 @@ const Challenges = () => {
       
       // If no local penalty, check the API
       try {
-        fetch(`${API_CONFIG.BASE_URL}/api/UserPenalties/active/${currentUser.userId}`, {
+        fetch(`${API_CONFIG.BASE_URL}/UserPenalties/active/${currentUser.userId}`, {
           headers: {
             'Authorization': `Bearer ${currentUser.token}`
           }
@@ -144,27 +149,12 @@ const Challenges = () => {
 
     const fetchUserItems = async () => {
       try {
-        // This would be replaced with an actual API call to get user's items
-        // For now, we'll simulate user-specific items based on user ID
-        const userId = currentUser.userId || 0;
-        let mockItems = [];
-        
-        // Only add items if they "belong" to this user (based on user ID)
-        if (userId % 2 === 0) { // Even user IDs get 2x multiplier
-          mockItems.push({ id: 1, name: "2x Multiplier", type: "multiplier", value: 2, userId: userId });
-        }
-        
-        if (userId % 5 === 0) { // User IDs divisible by 5 get 5x multiplier
-          mockItems.push({ id: 2, name: "5x Multiplier", type: "multiplier", value: 5, userId: userId });
-        }
-        
-        if (userId % 3 === 0) { // User IDs divisible by 3 get veto
-          mockItems.push({ id: 3, name: "Challenge Veto", type: "veto", userId: userId });
-        }
-        
-        setUserItems(mockItems);
-        setMultiplierItems(mockItems.filter(item => item.type === "multiplier"));
-        setVetoItems(mockItems.filter(item => item.type === "veto"));
+        // In a real app, we would fetch user items from the API
+        // For now, we'll use an empty array since the API endpoint isn't available yet
+        const userItemsData = [];
+        setUserItems(userItemsData);
+        setMultiplierItems(userItemsData.filter(item => item.type === "multiplier"));
+        setVetoItems(userItemsData.filter(item => item.type === "veto"));
       } catch (err) {
         console.error("Error fetching user items:", err);
       }
@@ -296,8 +286,8 @@ const Challenges = () => {
         severity: 'success'
       });
       
-      // In a real app, we would remove the veto item from the user's inventory here
-      // For now, we'll just simulate it by removing it from the local state
+      // Call API to use veto item
+      // For now, just update local state
       const vetoItem = vetoItems[0];
       setVetoItems(vetoItems.filter(item => item.id !== vetoItem.id));
       setUserItems(userItems.filter(item => item.id !== vetoItem.id));
@@ -330,6 +320,7 @@ const Challenges = () => {
     setCurrentMultiplier(multiplier);
     handleCloseMultiplierMenu();
     
+    // In a real app, we would call the API to apply the multiplier
     setNotification({
       open: true,
       message: `${multiplier}x multiplier applied!`,
@@ -476,15 +467,16 @@ const Challenges = () => {
             <Box className="challenge-card-container" sx={{ mb: 4 }}>
               <Box 
                 className={`challenge-card-flip ${cardFlipped ? 'flipped' : ''}`}
-                onClick={!cardFlipped ? handleCardClick : undefined}
+                onClick={!cardFlipped && !hasActiveChallenge && !hasActivePenalty ? handleCardClick : undefined}
                 sx={{
                   width: 280,
                   height: 400,
                   perspective: '1000px',
-                  cursor: cardFlipped ? 'default' : 'pointer',
+                  cursor: cardFlipped || hasActiveChallenge || hasActivePenalty ? 'default' : 'pointer',
                   transition: 'transform 0.3s ease',
+                  opacity: hasActiveChallenge || hasActivePenalty ? 0.6 : 1,
                   '&:hover': {
-                    transform: !cardFlipped ? 'translateY(-10px)' : 'none'
+                    transform: !cardFlipped && !hasActiveChallenge && !hasActivePenalty ? 'translateY(-10px)' : 'none'
                   }
                 }}
               >

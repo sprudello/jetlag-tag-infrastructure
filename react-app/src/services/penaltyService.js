@@ -16,7 +16,7 @@ const penaltyService = {
    */
   updatePenalty: async (penaltyData, token) => {
     try {
-      const response = await fetch(`${API_URL}/api/Penalty`, {
+      const response = await fetch(`${API_URL}/Penalty`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ const penaltyService = {
       
       return await response.json().catch(() => ({})); // Handle empty responses
     } catch (error) {
-      console.error(`PUT request failed: /api/Penalty`, error);
+      console.error(`PUT request failed: /Penalty`, error);
       throw error;
     }
   },

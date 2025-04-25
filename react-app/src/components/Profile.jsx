@@ -76,7 +76,7 @@ const Profile = () => {
           // If no local penalty, check the API
           if (!activePenalty) {
             try {
-              const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/api/UserPenalties/active/${currentUser.userId}`, {
+              const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/UserPenalties/active/${currentUser.userId}`, {
                 headers: {
                   'Authorization': `Bearer ${currentUser.token}`
                 }
@@ -114,26 +114,12 @@ const Profile = () => {
           
           // Fetch user's active challenge
           try {
-            // Use the new endpoint that returns challenge details directly
-            const response = await fetch(`${API_CONFIG.BASE_URL}/api/UserChallenges/currentChallenge/${currentUser.userId}`, {
+            // Use the endpoint that returns challenge details directly
+            const response = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
               headers: {
                 'Authorization': `Bearer ${currentUser.token}`
               }
             });
-            
-            // If we get a 404, try the alternative endpoint format
-            if (response.status === 404) {
-              console.log("Trying alternative endpoint format...");
-              const altResponse = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
-                headers: {
-                  'Authorization': `Bearer ${currentUser.token}`
-                }
-              });
-              
-              if (altResponse.ok) {
-                return altResponse;
-              }
-            }
             
             if (!response.ok) {
               throw new Error(`Failed to fetch current challenge: ${response.status}`);

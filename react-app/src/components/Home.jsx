@@ -88,7 +88,7 @@ const Home = () => {
       // If no local penalty, check the API
       if (!activePenalty) {
         try {
-          const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/api/UserPenalties/active/${currentUser.userId}`, {
+          const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/UserPenalties/active/${currentUser.userId}`, {
             headers: {
               'Authorization': `Bearer ${currentUser.token}`
             }
@@ -114,26 +114,12 @@ const Home = () => {
       
       // Fetch user's active challenge
       try {
-        // Use the new endpoint that returns challenge details directly
-        const response = await fetch(`${API_CONFIG.BASE_URL}/api/UserChallenges/currentChallenge/${currentUser.userId}`, {
+        // Use the endpoint that returns challenge details directly
+        const response = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
           headers: {
             'Authorization': `Bearer ${currentUser.token}`
           }
         });
-        
-        // If we get a 404, try the alternative endpoint format
-        if (response.status === 404) {
-          console.log("Trying alternative endpoint format...");
-          const altResponse = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
-            headers: {
-              'Authorization': `Bearer ${currentUser.token}`
-            }
-          });
-          
-          if (altResponse.ok) {
-            return altResponse;
-          }
-        }
         
         if (!response.ok) {
           throw new Error(`Failed to fetch current challenge: ${response.status}`);
@@ -158,7 +144,9 @@ const Home = () => {
         }
       } catch (err) {
         console.error("Error fetching active challenge:", err);
-        setError(prev => ({ ...prev, challenges: 'Failed to load active challenge: ' + err.message }));
+        // Don't set error for new users with no challenges
+        // Just set empty challenges array instead
+        setChallenges([]);
       } finally {
         setLoading(prev => ({ ...prev, challenges: false }));
       }
@@ -418,7 +406,7 @@ const Home = () => {
       
       // Update the penalty in the database
       try {
-        const penaltyUpdateResponse = await fetch(`${API_CONFIG.BASE_URL}/api/Penalty`, {
+        const penaltyUpdateResponse = await fetch(`${API_CONFIG.BASE_URL}/Penalty`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
