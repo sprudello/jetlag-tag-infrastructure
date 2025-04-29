@@ -117,29 +117,30 @@ const Home = () => {
       // Fetch user's active challenge
       try {
         // Use the endpoint that returns challenge details directly
-        const response = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/currentChallenge/${currentUser.userId}`, {
           headers: {
             'Authorization': `Bearer ${currentUser.token}`
           }
         });
-        
+            
         if (!response.ok) {
           throw new Error(`Failed to fetch current challenge: ${response.status}`);
         }
-        
+            
         const data = await response.json();
-        
-        if (data.activeChallenge) {
-          // The challenge details are already included in the response
+            
+        // The backend returns the UserChallenge object directly
+        if (data) {
           setChallenges([{
-            id: data.activeChallenge.card.id,
-            title: data.activeChallenge.card.title,
-            description: data.activeChallenge.card.description,
-            reward: data.activeChallenge.card.reward,
-            isActive: data.activeChallenge.card.isActive,
+            id: data.challengeCard.id,
+            title: data.challengeCard.title,
+            description: data.challengeCard.description,
+            reward: data.challengeCard.reward,
+            isActive: data.challengeCard.isActive,
             isUserActive: true,
-            startTime: data.activeChallenge.startTime,
-            userChallengeId: data.activeChallenge.id
+            startTime: data.startTime,
+            userChallengeId: data.id,
+            status: data.status
           }]);
         } else {
           setChallenges([]);

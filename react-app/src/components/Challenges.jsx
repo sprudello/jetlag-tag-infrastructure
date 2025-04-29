@@ -75,7 +75,7 @@ const Challenges = () => {
     // Check if user has an active challenge
     const checkActiveChallenge = async () => {
       try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/currentChallenge/${currentUser.userId}`, {
           headers: {
             'Authorization': `Bearer ${currentUser.token}`
           }

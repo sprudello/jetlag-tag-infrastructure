@@ -116,7 +116,7 @@ const Profile = () => {
           // Fetch user's active challenge
           try {
             // Use the endpoint that returns challenge details directly
-            const response = await fetch(`${API_CONFIG.BASE_URL}/UserChallenges/currentChallenge/${currentUser.userId}`, {
+            const response = await fetch(`${API_CONFIG.BASE_URL}/currentChallenge/${currentUser.userId}`, {
               headers: {
                 'Authorization': `Bearer ${currentUser.token}`
               }
