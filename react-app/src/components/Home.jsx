@@ -34,6 +34,7 @@ import transportationService from '../services/transportationService';
 import itemService from '../services/itemService';
 import apiService from '../services/apiService';
 import API_CONFIG from '../config/apiConfig';
+import usePenaltyTimer from '../hooks/usePenaltyTimer';
 import '../styles/pages/home.scss';
 
 const Home = () => {
@@ -56,63 +57,16 @@ const Home = () => {
     userItems: null
   });
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
-  const [activePenalty, setActivePenalty] = useState(null);
-  const [penaltyTimeRemaining, setPenaltyTimeRemaining] = useState(null);
+  const { 
+    activePenalty, 
+    penaltyTimeRemaining, 
+    loading: penaltyLoading, 
+    error: penaltyError 
+  } = usePenaltyTimer(currentUser);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!currentUser?.token) return;
-      
-      // Check for active penalty in localStorage first
-      const storedPenalty = localStorage.getItem(`penalty_${currentUser.userId}`);
-      if (storedPenalty) {
-        try {
-          const penaltyData = JSON.parse(storedPenalty);
-          const endTime = new Date(penaltyData.endTime);
-          
-          // Only set the penalty if it hasn't expired yet
-          if (endTime > new Date()) {
-            setActivePenalty({
-              endTime: endTime,
-              durationInMinutes: penaltyData.durationInMinutes
-            });
-          } else {
-            // Clear expired
-            localStorage.removeItem(`penalty_${currentUser.userId}`);
-          }
-        } catch (e) {
-          console.error("Error parsing stored penalty:", e);
-        }
-      }
-      
-      // If no local penalty, check the API
-      if (!activePenalty) {
-        try {
-          const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/GetUserPenalty/${currentUser.userId}`, {
-            headers: {
-              'Authorization': `Bearer ${currentUser.token}`
-            }
-          });
-          
-          if (penaltyResponse.ok) {
-            const penaltyData = await penaltyResponse.json();
-            // The endpoint returns penalty data directly if it exists
-            const penalty = {
-              endTime: new Date(penaltyData.endTime),
-              durationInMinutes: penaltyData.durationInMinutes
-            };
-            setActivePenalty(penalty);
-            
-            // Store in localStorage for persistence
-            localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
-          }
-        } catch (err) {
-          // 404 is expected if no penalty exists, so we don't need to log that as an error
-          if (!err.message.includes('404')) {
-            console.error("Error fetching active penalty:", err);
-          }
-        }
-      }
       
       // Fetch user's active challenge
       try {
@@ -203,47 +157,7 @@ const Home = () => {
     fetchData();
   }, [currentUser]);
   
-  // Update penalty timer
-  useEffect(() => {
-    if (!activePenalty) {
-      setPenaltyTimeRemaining(null);
-      return;
-    }
-    
-    const updateRemainingTime = () => {
-      const now = new Date();
-      const endTime = new Date(activePenalty.endTime);
-      const diffMs = endTime - now;
-      
-      if (diffMs <= 0) {
-        // Penalty has expired
-        setActivePenalty(null);
-        setPenaltyTimeRemaining(null);
-        
-        // Clear from localStorage when expired
-        localStorage.removeItem(`penalty_${currentUser?.userId}`);
-        return;
-      }
-      
-      // Calculate remaining time in minutes and seconds
-      const diffMinutes = Math.floor(diffMs / 60000);
-      const diffSeconds = Math.floor((diffMs % 60000) / 1000);
-      
-      setPenaltyTimeRemaining({
-        minutes: diffMinutes,
-        seconds: diffSeconds,
-        total: diffMs
-      });
-    };
-    
-    // Update immediately
-    updateRemainingTime();
-    
-    // Then update every second
-    const timerId = setInterval(updateRemainingTime, 1000);
-    
-    return () => clearInterval(timerId);
-  }, [activePenalty, currentUser]);
+  // Penalty timer is now handled by usePenaltyTimer hook
 
   const renderSection = (title, icon, items, loadingState, errorState, itemRenderer) => (
     <Box className="home-section">
@@ -378,19 +292,7 @@ const Home = () => {
         userChallengeId: selectedChallenge.userChallengeId
       };
       
-      // Set the penalty locally first
-      const penaltyEndTime = new Date();
-      penaltyEndTime.setMinutes(penaltyEndTime.getMinutes() + 30); // Standard 30-minute penalty
-      
-      // Store the penalty in localStorage for persistence
-      const penaltyData = {
-        endTime: penaltyEndTime.toISOString(),
-        durationInMinutes: 30
-      };
-      localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penaltyData));
-      
-      // Set the active penalty state
-      setActivePenalty(penaltyData);
+      // The penalty will be fetched automatically by the usePenaltyTimer hook
       
       // Call the API endpoint to mark challenge as failed
       // This will automatically create a penalty record
@@ -593,33 +495,31 @@ const Home = () => {
                 Here's an overview of your current activity.
               </Typography>
 
-              {penaltyTimeRemaining && (
-                <Box
-                  sx={{
-                    mt: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    color: "error.main",
-                    animation: "pulse 2s infinite",
-                    "@keyframes pulse": {
-                      "0%": { opacity: 0.7 },
-                      "50%": { opacity: 1 },
-                      "100%": { opacity: 0.7 },
-                    },
-                  }}
+              <Box
+                sx={{
+                  mt: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  color: penaltyTimeRemaining ? "error.main" : "success.main",
+                  animation: penaltyTimeRemaining ? "pulse 2s infinite" : "none",
+                  "@keyframes pulse": {
+                    "0%": { opacity: 0.7 },
+                    "50%": { opacity: 1 },
+                    "100%": { opacity: 0.7 },
+                  },
+                }}
+              >
+                <TimerIcon color={penaltyTimeRemaining ? "error" : "success"} sx={{ mr: 1 }} />
+                <Typography
+                  variant="body1"
+                  fontWeight="bold"
+                  color={penaltyTimeRemaining ? "error.main" : "success.main"}
                 >
-                  <TimerIcon color="error" sx={{ mr: 1 }} />
-                  <Typography
-                    variant="body1"
-                    fontWeight="bold"
-                    color="error.main"
-                  >
-                    Penalty: {penaltyTimeRemaining.minutes}:
-                    {penaltyTimeRemaining.seconds.toString().padStart(2, "0")}{" "}
-                    remaining
-                  </Typography>
-                </Box>
-              )}
+                  {penaltyTimeRemaining 
+                    ? `Penalty: ${penaltyTimeRemaining.formatted} remaining` 
+                    : "User has no penalty"}
+                </Typography>
+              </Box>
             </Box>
           </Box>
           <Box>

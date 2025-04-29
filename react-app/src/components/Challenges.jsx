@@ -30,13 +30,15 @@ import {
   FlashOn as MultiplierIcon,
   Block as VetoIcon,
   MoreVert as MoreIcon,
-  QuestionMark as QuestionIcon
+  QuestionMark as QuestionIcon,
+  Timer as TimerIcon
 } from '@mui/icons-material';
 import GameRules from './GameRules';
 import { useAuth } from '../contexts/AuthContext';
 import challengeService from '../services/challengeService';
 import penaltyService from '../services/penaltyService';
 import itemService from '../services/itemService';
+import usePenaltyTimer from '../hooks/usePenaltyTimer';
 import '../styles/pages/challenges.scss';
 
 const Challenges = () => {
@@ -58,7 +60,12 @@ const Challenges = () => {
   const [showMultiplierMenu, setShowMultiplierMenu] = useState(false);
 
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
-  const [hasActivePenalty, setHasActivePenalty] = useState(false);
+  const { 
+    activePenalty, 
+    penaltyTimeRemaining, 
+    loading: penaltyLoading 
+  } = usePenaltyTimer(currentUser);
+  const hasActivePenalty = !!activePenalty;
   
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -101,60 +108,7 @@ const Challenges = () => {
       }
     };
     
-    // Check if user has an active penalty
-    const checkActivePenalty = () => {
-      // Check localStorage first
-      const storedPenalty = localStorage.getItem(`penalty_${currentUser.userId}`);
-      if (storedPenalty) {
-        try {
-          const penaltyData = JSON.parse(storedPenalty);
-          const endTime = new Date(penaltyData.endTime);
-          
-          // Only set the penalty if it hasn't expired yet
-          if (endTime > new Date()) {
-            setHasActivePenalty(true);
-            return;
-          } else {
-            // Clear expired penalty
-            localStorage.removeItem(`penalty_${currentUser.userId}`);
-          }
-        } catch (e) {
-          console.error("Error parsing stored penalty:", e);
-        }
-      }
-      
-      // If no local penalty, check the API
-      try {
-        fetch(`${API_CONFIG.BASE_URL}/GetUserPenalty/${currentUser.userId}`, {
-          headers: {
-            'Authorization': `Bearer ${currentUser.token}`
-          }
-        }).then(response => {
-          if (response.ok) {
-            return response.json();
-          }
-          return null;
-        }).then(data => {
-          if (data) {
-            setHasActivePenalty(true);
-            
-            // Store in localStorage for persistence
-            const penalty = {
-              endTime: new Date(data.endTime),
-              durationInMinutes: data.durationInMinutes
-            };
-            localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
-          }
-        }).catch(err => {
-          // 404 is expected if no penalty exists
-          if (!err.message.includes('404')) {
-            console.error("Error checking active penalty:", err);
-          }
-        });
-      } catch (err) {
-        console.error("Error checking active penalty:", err);
-      }
-    };
+    // Active penalty is now handled by usePenaltyTimer hook
 
     const fetchUserItems = async () => {
       try {
@@ -173,7 +127,6 @@ const Challenges = () => {
       fetchChallenges();
       fetchUserItems();
       checkActiveChallenge();
-      checkActivePenalty();
     }
   }, [currentUser]);
   
@@ -469,7 +422,12 @@ const Challenges = () => {
             
             {hasActivePenalty && (
               <Alert severity="error" sx={{ mb: 2, maxWidth: 400 }}>
-                You have an active penalty. You cannot draw a challenge until the penalty expires.
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <TimerIcon sx={{ mr: 1 }} />
+                  <Typography variant="body2">
+                    Penalty: {penaltyTimeRemaining?.formatted || '0:00'} remaining. You cannot draw a challenge until the penalty expires.
+                  </Typography>
+                </Box>
               </Alert>
             )}
             
