@@ -76,7 +76,7 @@ const Profile = () => {
           // If no local penalty, check the API
           if (!activePenalty) {
             try {
-              const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/UserPenalties/active/${currentUser.userId}`, {
+              const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/GetUserPenalty/${currentUser.userId}`, {
                 headers: {
                   'Authorization': `Bearer ${currentUser.token}`
                 }
@@ -84,19 +84,20 @@ const Profile = () => {
           
               if (penaltyResponse.ok) {
                 const penaltyData = await penaltyResponse.json();
-                if (penaltyData.hasActivePenalty) {
-                  const penalty = {
-                    endTime: new Date(penaltyData.endTime),
-                    durationInMinutes: penaltyData.durationInMinutes
-                  };
-                  setActivePenalty(penalty);
-              
-                  // Store in localStorage for persistence
-                  localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
-                }
+                const penalty = {
+                  endTime: new Date(penaltyData.endTime),
+                  durationInMinutes: penaltyData.durationInMinutes
+                };
+                setActivePenalty(penalty);
+            
+                // Store in localStorage for persistence
+                localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
               }
             } catch (penaltyErr) {
-              console.error('Error fetching active penalty:', penaltyErr);
+              // 404 is expected if no penalty exists
+              if (!penaltyErr.message.includes('404')) {
+                console.error('Error fetching active penalty:', penaltyErr);
+              }
             }
           }
           
@@ -127,16 +128,17 @@ const Profile = () => {
             
             const data = await response.json();
             
-            if (data.activeChallenge) {
-              // The challenge details are already included in the response
+            // The backend returns the UserChallenge object directly
+            if (data) {
               setActiveChallenge({
-                id: data.activeChallenge.card.id,
-                title: data.activeChallenge.card.title,
-                description: data.activeChallenge.card.description,
-                reward: data.activeChallenge.card.reward,
-                isActive: data.activeChallenge.card.isActive,
-                startTime: data.activeChallenge.startTime,
-                userChallengeId: data.activeChallenge.id
+                id: data.challengeCard.id,
+                title: data.challengeCard.title,
+                description: data.challengeCard.description,
+                reward: data.challengeCard.reward,
+                isActive: data.challengeCard.isActive,
+                startTime: data.startTime,
+                userChallengeId: data.id,
+                status: data.status
               });
             }
           } catch (challengeErr) {
@@ -373,9 +375,18 @@ const Profile = () => {
                     color="primary" 
                     size="small" 
                   />
-                  <Typography variant="body2" color="text.secondary">
-                    Started: {new Date(activeChallenge.startTime).toLocaleString()}
-                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Started: {new Date(activeChallenge.startTime).toLocaleString()}
+                    </Typography>
+                    {activeChallenge.status !== undefined && (
+                      <Chip 
+                        label={`Status: ${activeChallenge.status === 0 ? 'In Progress' : activeChallenge.status === 1 ? 'Completed' : 'Failed'}`}
+                        color={activeChallenge.status === 0 ? 'primary' : activeChallenge.status === 1 ? 'success' : 'error'}
+                        size="small"
+                      />
+                    )}
+                  </Box>
                 </Box>
               </CardContent>
             </Card>

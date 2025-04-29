@@ -77,7 +77,7 @@ const Home = () => {
               durationInMinutes: penaltyData.durationInMinutes
             });
           } else {
-            // Clear expired penalty
+            // Clear expired
             localStorage.removeItem(`penalty_${currentUser.userId}`);
           }
         } catch (e) {
@@ -88,7 +88,7 @@ const Home = () => {
       // If no local penalty, check the API
       if (!activePenalty) {
         try {
-          const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/UserPenalties/active/${currentUser.userId}`, {
+          const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/GetUserPenalty/${currentUser.userId}`, {
             headers: {
               'Authorization': `Bearer ${currentUser.token}`
             }
@@ -96,19 +96,21 @@ const Home = () => {
           
           if (penaltyResponse.ok) {
             const penaltyData = await penaltyResponse.json();
-            if (penaltyData.hasActivePenalty) {
-              const penalty = {
-                endTime: new Date(penaltyData.endTime),
-                durationInMinutes: penaltyData.durationInMinutes
-              };
-              setActivePenalty(penalty);
-              
-              // Store in localStorage for persistence
-              localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
-            }
+            // The endpoint returns penalty data directly if it exists
+            const penalty = {
+              endTime: new Date(penaltyData.endTime),
+              durationInMinutes: penaltyData.durationInMinutes
+            };
+            setActivePenalty(penalty);
+            
+            // Store in localStorage for persistence
+            localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
           }
         } catch (err) {
-          console.error("Error fetching active penalty:", err);
+          // 404 is expected if no penalty exists, so we don't need to log that as an error
+          if (!err.message.includes('404')) {
+            console.error("Error fetching active penalty:", err);
+          }
         }
       }
       
@@ -390,6 +392,7 @@ const Home = () => {
       setActivePenalty(penaltyData);
       
       // Call the API endpoint to mark challenge as failed
+      // This will automatically create a penalty record
       const response = await fetch(`${API_CONFIG.BASE_URL}/fail`, {
         method: 'POST',
         headers: {
@@ -404,22 +407,28 @@ const Home = () => {
         throw new Error(errorData.message || 'Failed to report challenge failure');
       }
       
-      // Update the penalty in the database
+      // After reporting failure, fetch the updated penalty details
       try {
-        const penaltyUpdateResponse = await fetch(`${API_CONFIG.BASE_URL}/Penalty`, {
-          method: 'PUT',
+        const penaltyResponse = await fetch(`${API_CONFIG.BASE_URL}/GetUserPenalty/${currentUser.userId}`, {
           headers: {
-            'Content-Type': 'application/json',
             'Authorization': `Bearer ${currentUser.token}`
-          },
-          body: JSON.stringify({ durationInMinutes: 30 })
+          }
         });
         
-        if (!penaltyUpdateResponse.ok) {
-          console.error('Failed to update penalty in database');
+        if (penaltyResponse.ok) {
+          const penaltyData = await penaltyResponse.json();
+          // Update the local penalty data with the actual data from the server
+          const updatedPenalty = {
+            endTime: new Date(penaltyData.endTime),
+            durationInMinutes: penaltyData.durationInMinutes
+          };
+          
+          // Update state and localStorage
+          setActivePenalty(updatedPenalty);
+          localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(updatedPenalty));
         }
       } catch (penaltyErr) {
-        console.error('Error updating penalty:', penaltyErr);
+        console.error('Error fetching updated penalty:', penaltyErr);
       }
       
       setNotification({
@@ -554,44 +563,59 @@ const Home = () => {
   return (
     <Box className="home-container">
       <Paper elevation={2} className="welcome-section">
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar 
-              sx={{ 
-                width: 60, 
-                height: 60, 
-                bgcolor: currentUser?.isAdmin ? 'secondary.main' : 'primary.main',
-                fontSize: '1.5rem'
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Avatar
+              sx={{
+                width: 60,
+                height: 60,
+                bgcolor: currentUser?.isAdmin
+                  ? "secondary.main"
+                  : "primary.main",
+                fontSize: "1.5rem",
               }}
             >
-              {currentUser?.username?.charAt(0).toUpperCase() || 'U'}
+              {currentUser?.username?.charAt(0).toUpperCase() || "U"}
             </Avatar>
             <Box>
               <Typography variant="h4" component="h1" gutterBottom>
-                Welcome, {currentUser?.username || 'User'}!
+                Welcome, {currentUser?.username || "User"}!
               </Typography>
               <Typography variant="body1">
                 Here's an overview of your current activity.
               </Typography>
-              
+
               {penaltyTimeRemaining && (
-                <Box 
-                  sx={{ 
-                    mt: 1, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    color: 'error.main',
-                    animation: 'pulse 2s infinite',
-                    '@keyframes pulse': {
-                      '0%': { opacity: 0.7 },
-                      '50%': { opacity: 1 },
-                      '100%': { opacity: 0.7 }
-                    }
+                <Box
+                  sx={{
+                    mt: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    color: "error.main",
+                    animation: "pulse 2s infinite",
+                    "@keyframes pulse": {
+                      "0%": { opacity: 0.7 },
+                      "50%": { opacity: 1 },
+                      "100%": { opacity: 0.7 },
+                    },
                   }}
                 >
                   <TimerIcon color="error" sx={{ mr: 1 }} />
-                  <Typography variant="body1" fontWeight="bold" color="error.main">
-                    Penalty: {penaltyTimeRemaining.minutes}:{penaltyTimeRemaining.seconds.toString().padStart(2, '0')} remaining
+                  <Typography
+                    variant="body1"
+                    fontWeight="bold"
+                    color="error.main"
+                  >
+                    Penalty: {penaltyTimeRemaining.minutes}:
+                    {penaltyTimeRemaining.seconds.toString().padStart(2, "0")}{" "}
+                    remaining
                   </Typography>
                 </Box>
               )}
@@ -610,38 +634,74 @@ const Home = () => {
             Your Active Challenge
           </Typography>
         </Box>
+
         <Divider sx={{ my: 2 }} />
-        
-        {loading.challenges ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+
+        {/* Loading state */}
+        {loading.challenges && (
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
             <CircularProgress />
           </Box>
-        ) : error.challenges ? (
+        )}
+
+        {/* Error state */}
+        {error.challenges && (
           <Typography color="error" sx={{ p: 2 }}>
             {error.challenges}
           </Typography>
-        ) : challenges.length === 0 ? (
-          <Typography sx={{ p: 2 }}>
-            No challenge accepted. Visit the Challenges tab to accept one!
-          </Typography>
-        ) : (
-          <Grid container spacing={3}>
-            {challenges.map(challenge => renderChallengeItem(challenge))}
-          </Grid>
+        )}
+
+        {/* Empty state */}
+        {!loading.challenges &&
+          !error.challenges &&
+          challenges.length === 0 && (
+            <Typography sx={{ p: 2 }}>
+              No challenge accepted. Visit the Challenges tab to accept one!
+            </Typography>
+          )}
+
+        {/* Content */}
+        {!loading.challenges && !error.challenges && challenges.length > 0 && (
+          <>
+            <Grid container spacing={3}>
+              {challenges.map((challenge) => renderChallengeItem(challenge))}
+            </Grid>
+
+            {/* Status chip */}
+            {challenges[0]?.status !== undefined && (
+              <Box sx={{ mt: 2, display: "flex", justifyContent: "center" }}>
+                <Chip
+                  label={`Status: ${
+                    challenges[0].status === 0
+                      ? "In Progress"
+                      : challenges[0].status === 1
+                      ? "Completed"
+                      : "Failed"
+                  }`}
+                  color={
+                    challenges[0].status === 0
+                      ? "primary"
+                      : challenges[0].status === 1
+                      ? "success"
+                      : "error"
+                  }
+                  sx={{ fontWeight: "bold" }}
+                />
+              </Box>
+            )}
+          </>
         )}
       </Box>
 
-      {/* We've moved the Purchased Items section to replace the Shop Preview */}
-
       {renderSection(
-        "Purchased Items", 
-        <InventoryIcon color="secondary" sx={{ mr: 1 }} />, 
-        userItems, 
-        loading.userItems, 
-        error.userItems, 
+        "Purchased Items",
+        <InventoryIcon color="secondary" sx={{ mr: 1 }} />,
+        userItems,
+        loading.userItems,
+        error.userItems,
         renderUserItemItem
       )}
-      
+
       {/* Challenge Details Dialog */}
       <Dialog
         open={openChallengeDialog}
@@ -651,12 +711,14 @@ const Home = () => {
       >
         {selectedChallenge && (
           <>
-            <DialogTitle sx={{ 
-              bgcolor: 'primary.dark', 
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center'
-            }}>
+            <DialogTitle
+              sx={{
+                bgcolor: "primary.dark",
+                color: "white",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
               <ChallengeIcon sx={{ mr: 1 }} />
               {selectedChallenge.title}
             </DialogTitle>
@@ -664,61 +726,89 @@ const Home = () => {
               <Typography variant="body1" paragraph>
                 {selectedChallenge.description}
               </Typography>
-              
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-                <Chip 
-                  label={`Reward: ${selectedChallenge.reward} coins`} 
-                  color="primary" 
+
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mt: 2,
+                }}
+              >
+                <Chip
+                  label={`Reward: ${selectedChallenge.reward} coins`}
+                  color="primary"
                   size="medium"
-                  sx={{ fontWeight: 'bold' }}
+                  sx={{ fontWeight: "bold" }}
                 />
-                
+
                 <Typography variant="body2" color="text.secondary">
-                  Started: {new Date(selectedChallenge.startTime).toLocaleString()}
+                  Started:{" "}
+                  {new Date(selectedChallenge.startTime).toLocaleString()}
                 </Typography>
               </Box>
-              
+
               <Divider sx={{ my: 3 }} />
-              
-              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'bold' }}>
+
+              <Typography
+                variant="subtitle1"
+                gutterBottom
+                sx={{ fontWeight: "bold" }}
+              >
                 Have you completed this challenge?
               </Typography>
-              
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}
+              >
                 {vetoItems.length > 0 && (
-                  <Button 
-                    variant="contained" 
+                  <Button
+                    variant="contained"
                     color="warning"
                     size="large"
                     onClick={handleVetoChallenge}
                     disabled={challengeActionLoading}
-                    startIcon={challengeActionLoading ? <CircularProgress size={20} /> : <VetoIcon />}
-                    sx={{ width: '32%' }}
+                    startIcon={
+                      challengeActionLoading ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <VetoIcon />
+                      )
+                    }
+                    sx={{ width: "32%" }}
                   >
                     Veto
                   </Button>
                 )}
-                
-                <Button 
-                  variant="contained" 
+
+                <Button
+                  variant="contained"
                   color="error"
                   size="large"
                   onClick={handleChallengeFail}
                   disabled={challengeActionLoading}
-                  startIcon={challengeActionLoading ? <CircularProgress size={20} /> : null}
-                  sx={{ width: vetoItems.length > 0 ? '32%' : '48%' }}
+                  startIcon={
+                    challengeActionLoading ? (
+                      <CircularProgress size={20} />
+                    ) : null
+                  }
+                  sx={{ width: vetoItems.length > 0 ? "32%" : "48%" }}
                 >
                   Failed
                 </Button>
-                
-                <Button 
-                  variant="contained" 
+
+                <Button
+                  variant="contained"
                   color="success"
                   size="large"
                   onClick={handleChallengeComplete}
                   disabled={challengeActionLoading}
-                  startIcon={challengeActionLoading ? <CircularProgress size={20} /> : null}
-                  sx={{ width: vetoItems.length > 0 ? '32%' : '48%' }}
+                  startIcon={
+                    challengeActionLoading ? (
+                      <CircularProgress size={20} />
+                    ) : null
+                  }
+                  sx={{ width: vetoItems.length > 0 ? "32%" : "48%" }}
                 >
                   Completed
                 </Button>
@@ -727,18 +817,18 @@ const Home = () => {
           </>
         )}
       </Dialog>
-      
+
       {/* Notification Snackbar */}
-      <Snackbar 
-        open={notification.open} 
-        autoHideDuration={6000} 
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
         onClose={() => setNotification({ ...notification, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert 
-          onClose={() => setNotification({ ...notification, open: false })} 
+        <Alert
+          onClose={() => setNotification({ ...notification, open: false })}
           severity={notification.severity}
-          sx={{ width: '100%' }}
+          sx={{ width: "100%" }}
         >
           {notification.message}
         </Alert>

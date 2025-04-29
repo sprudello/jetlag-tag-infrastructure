@@ -83,7 +83,8 @@ const Challenges = () => {
         
         if (response.ok) {
           const data = await response.json();
-          if (data.activeChallenge) {
+          // The backend returns the UserChallenge object directly
+          if (data && data.status === 0) { // Status 0 means "In Progress"
             setHasActiveChallenge(true);
             return;
           }
@@ -92,7 +93,10 @@ const Challenges = () => {
         // If we get here, user has no active challenge
         setHasActiveChallenge(false);
       } catch (err) {
-        console.error("Error checking active challenge:", err);
+        // 404 is expected if no challenge exists
+        if (!err.message.includes('404')) {
+          console.error("Error checking active challenge:", err);
+        }
         setHasActiveChallenge(false);
       }
     };
@@ -121,7 +125,7 @@ const Challenges = () => {
       
       // If no local penalty, check the API
       try {
-        fetch(`${API_CONFIG.BASE_URL}/UserPenalties/active/${currentUser.userId}`, {
+        fetch(`${API_CONFIG.BASE_URL}/GetUserPenalty/${currentUser.userId}`, {
           headers: {
             'Authorization': `Bearer ${currentUser.token}`
           }
@@ -129,9 +133,9 @@ const Challenges = () => {
           if (response.ok) {
             return response.json();
           }
-          return { hasActivePenalty: false };
+          return null;
         }).then(data => {
-          if (data.hasActivePenalty) {
+          if (data) {
             setHasActivePenalty(true);
             
             // Store in localStorage for persistence
@@ -140,6 +144,11 @@ const Challenges = () => {
               durationInMinutes: data.durationInMinutes
             };
             localStorage.setItem(`penalty_${currentUser.userId}`, JSON.stringify(penalty));
+          }
+        }).catch(err => {
+          // 404 is expected if no penalty exists
+          if (!err.message.includes('404')) {
+            console.error("Error checking active penalty:", err);
           }
         });
       } catch (err) {
