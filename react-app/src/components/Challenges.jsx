@@ -248,9 +248,9 @@ const Challenges = () => {
       setCardFlipped(false);
       setRandomChallenge(null);
       
-      // Redirect to home page after a short delay
+      // Redirect to jetlag-tag-infrastructure after a short delay
       setTimeout(() => {
-        window.location.href = '/'; // This will refresh the page and go to home
+        window.location.href = '/jetlag-tag-infrastructure/'; // This will refresh the page and go to the specified path
       }, 1500);
       
     } catch (err) {

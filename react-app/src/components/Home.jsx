@@ -322,9 +322,9 @@ const Home = () => {
       setOpenChallengeDialog(false);
       setChallenges([]);
       
-      // Navigate to challenges page after a short delay
+      // Navigate to jetlag-tag-infrastructure after a short delay
       setTimeout(() => {
-        window.location.href = '/challenges';
+        window.location.href = '/jetlag-tag-infrastructure/';
       }, 1500);
       
     } catch (err) {
@@ -358,9 +358,9 @@ const Home = () => {
       setOpenChallengeDialog(false);
       setChallenges([]);
       
-      // Navigate to challenges page after a short delay
+      // Navigate to jetlag-tag-infrastructure after a short delay
       setTimeout(() => {
-        window.location.href = '/challenges';
+        window.location.href = '/jetlag-tag-infrastructure/';
       }, 1500);
     }
   };
@@ -432,9 +432,9 @@ const Home = () => {
       setOpenChallengeDialog(false);
       setChallenges([]);
       
-      // Navigate to challenges page after a short delay
+      // Navigate to jetlag-tag-infrastructure after a short delay
       setTimeout(() => {
-        window.location.href = '/challenges';
+        window.location.href = '/jetlag-tag-infrastructure/';
       }, 1500);
       
     } catch (err) {
