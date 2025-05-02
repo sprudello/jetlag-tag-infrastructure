@@ -1,4 +1,6 @@
-﻿namespace tag_api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace tag_api.Models
 {
     public class UserPenalty
     {
@@ -7,8 +9,9 @@
         public int PenaltyId { get; set; }
         public DateTime EndTime { get; set; }
 
-        //Relationships
+        [JsonIgnore]
         public User User { get; set; }
+        [JsonIgnore]
         public Penalty Penalty { get; set; }
     }
 }

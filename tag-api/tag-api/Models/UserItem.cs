@@ -1,4 +1,6 @@
-﻿namespace tag_api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace tag_api.Models
 {
     public class UserItem
     {
@@ -7,8 +9,9 @@
         public int ItemId { get; set; }
         public DateTime PurchaseDate { get; set; }
 
-        //Relationship
+        [JsonIgnore]
         public User User { get; set; }
+        [JsonIgnore]
         public Item Item { get; set; }
     }
 }

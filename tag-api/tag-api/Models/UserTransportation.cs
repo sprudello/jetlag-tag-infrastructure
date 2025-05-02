@@ -15,6 +15,7 @@ namespace tag_api.Models
         //Relationships
         [JsonIgnore]
         public User User { get; set; }
+        [JsonIgnore]
         public TransportationType TransportationType { get; set; }
     }
 }

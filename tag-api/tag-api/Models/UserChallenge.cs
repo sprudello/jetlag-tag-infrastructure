@@ -1,4 +1,6 @@
-﻿namespace tag_api.Models
+﻿using System.Text.Json.Serialization;
+
+namespace tag_api.Models
 {
     public class UserChallenge
     {
@@ -11,7 +13,9 @@
         public ChallengeStatus Status { get; set; }
 
         //Relationships
+        [JsonIgnore]
         public User User { get; set; }
+        [JsonIgnore]
         public ChallengeCard ChallengeCard { get; set; }
     }
     public enum ChallengeStatus

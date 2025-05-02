@@ -18,7 +18,7 @@ namespace tag_api.Controllers
         }
 
         // POST: api/UserItems/buy
-        [HttpPost("buy")]
+        [HttpPost("/buy")]
         public async Task<IActionResult> BuyItem([FromBody] UserItemDTO request)
         {
             // Check for active penalty.
@@ -65,6 +65,41 @@ namespace tag_api.Controllers
                 remainingCurrency = user.Currency,
                 purchasedItem = userItem
             });
+        }
+        // GET: api/UserItems/user/{userId}
+        [HttpGet("GetAllUserItems/{userId}")]
+        public async Task<IActionResult> GetUserItems(int userId)
+        {
+            // Validate input
+            if (userId <= 0)
+                return BadRequest("Invalid user ID.");
+
+            // Check if the user exists
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound("User not found.");
+
+            // Retrieve all items owned by the user, including the item details
+            var userItems = await _context.UserItems
+                .Where(ui => ui.UserId == userId)
+                .Include(ui => ui.Item)
+                .Select(ui => new
+                {
+                    ui.Id,
+                    ui.ItemId,
+                    ui.PurchaseDate,
+                    Item = new
+                    {
+                        ui.Item.Id,
+                        ui.Item.Name,
+                        ui.Item.Description,
+                        ui.Item.Price,
+                        ui.Item.IsActive
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(userItems);
         }
     }
 }
