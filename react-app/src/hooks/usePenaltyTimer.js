@@ -186,9 +186,7 @@ const usePenaltyTimer = (currentUser) => {
     // Clean up interval
     return () => clearInterval(timerId);
   
-    // only re-run this setup when a *new* penalty arrives
-    // (we key off a stable property that won’t change on every tick,
-    // e.g. the original endTime)
+    // Only re-run on new penalty
   }, [activePenalty?.endTime, currentUser?.userId]);
 
   // Periodic refresh
