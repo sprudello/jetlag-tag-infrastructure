@@ -5,15 +5,15 @@ import API_CONFIG from '../config/apiConfig';
 const API_URL = API_CONFIG.BASE_URL;
 
 /**
- * Service to handle authentication API calls
+ * Authentication API service
  */
 const authService = {
   /**
-   * Login user and get JWT token
+   * Authenticates user
    * @param {Object} credentials - User credentials
    * @param {string} credentials.username - Username
    * @param {string} credentials.password - Password
-   * @returns {Promise<Object>} - User data with token and user info
+   * @returns {Promise<Object>} - User data with token
    */
   login: async (credentials) => {
     try {
@@ -80,8 +80,8 @@ const authService = {
   },
 
   /**
-   * Register a new user
-   * @param {Object} userData - User registration data
+   * Registers new user
+   * @param {Object} userData - Registration data
    * @param {string} userData.username - Username
    * @param {string} userData.password - Password
    * @returns {Promise<Object>} - Registration result
@@ -109,7 +109,7 @@ const authService = {
   },
 
   /**
-   * Logout user by removing token and user info
+   * Logs out user
    */
   logout: () => {
     localStorage.removeItem('authToken');
@@ -117,7 +117,7 @@ const authService = {
   },
 
   /**
-   * Check if user is authenticated
+   * Checks authentication status
    * @returns {boolean} - True if authenticated
    */
   isAuthenticated: () => {
@@ -125,7 +125,7 @@ const authService = {
   },
 
   /**
-   * Get current auth token
+   * Gets auth token
    * @returns {string|null} - Auth token or null
    */
   getToken: () => {

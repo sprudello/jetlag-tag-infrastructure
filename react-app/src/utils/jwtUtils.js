@@ -1,7 +1,7 @@
 /**
- * Decodes a JWT token to extract its payload
+ * Decodes JWT token payload
  * @param {string} token - JWT token
- * @returns {Object|null} - Decoded token payload or null if invalid
+ * @returns {Object|null} - Decoded payload or null if invalid
  */
 export const decodeToken = (token) => {
   if (!token) return null;

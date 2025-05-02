@@ -5,20 +5,20 @@ import API_CONFIG from '../config/apiConfig';
 const API_URL = API_CONFIG.BASE_URL;
 
 /**
- * Service for challenge-related API calls
+ * Challenge API service
  */
 const challengeService = {
   /**
-   * Get all challenges
+   * Fetches all challenges
    * @param {string} token - JWT token
-   * @returns {Promise<Array>} - List of challenges
+   * @returns {Promise<Array>} - Challenge list
    */
   getAllChallenges: async (token) => {
     return await apiService.get('/allChallenges', token);
   },
   
   /**
-   * Get a specific challenge by ID
+   * Fetches challenge by ID
    * @param {number} id - Challenge ID
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Challenge data
@@ -28,7 +28,7 @@ const challengeService = {
   },
   
   /**
-   * Create a new challenge
+   * Creates new challenge
    * @param {Object} challengeData - Challenge data
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Created challenge
@@ -38,7 +38,7 @@ const challengeService = {
   },
   
   /**
-   * Update an existing challenge
+   * Updates existing challenge
    * @param {number} id - Challenge ID
    * @param {Object} challengeData - Updated challenge data
    * @param {string} token - JWT token
@@ -67,7 +67,7 @@ const challengeService = {
   },
   
   /**
-   * Delete a challenge
+   * Deletes challenge
    * @param {number} id - Challenge ID
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Response data

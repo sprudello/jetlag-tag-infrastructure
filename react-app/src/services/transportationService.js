@@ -5,20 +5,20 @@ import API_CONFIG from '../config/apiConfig';
 const API_URL = API_CONFIG.BASE_URL;
 
 /**
- * Service for transportation-related API calls
+ * Transportation API service
  */
 const transportationService = {
   /**
-   * Get all transportation types
+   * Fetches all transportation types
    * @param {string} token - JWT token
-   * @returns {Promise<Array>} - List of transportation types
+   * @returns {Promise<Array>} - Transportation type list
    */
   getAllTransportationTypes: async (token) => {
     return await apiService.get('/allTransportationTypes', token);
   },
   
   /**
-   * Get a specific transportation type by ID
+   * Fetches transportation type by ID
    * @param {number} id - Transportation type ID
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Transportation type data
@@ -28,7 +28,7 @@ const transportationService = {
   },
   
   /**
-   * Create a new transportation type
+   * Creates new transportation type
    * @param {Object} transportationData - Transportation type data
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Created transportation type
@@ -38,9 +38,9 @@ const transportationService = {
   },
   
   /**
-   * Update an existing transportation type
+   * Updates existing transportation type
    * @param {number} id - Transportation type ID
-   * @param {Object} transportationData - Updated transportation type data
+   * @param {Object} transportationData - Updated transportation data
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Updated transportation type
    */
@@ -67,7 +67,7 @@ const transportationService = {
   },
   
   /**
-   * Delete a transportation type
+   * Deletes transportation type
    * @param {number} id - Transportation type ID
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Response data
@@ -93,7 +93,7 @@ const transportationService = {
   },
   
   /**
-   * Purchase transportation
+   * Purchases transportation
    * @param {Object} purchaseData - Purchase data (userId, transportationTypeId, durationInMinutes)
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Purchase result

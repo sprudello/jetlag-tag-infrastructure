@@ -35,21 +35,21 @@ const AdminDashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Fetch challenges count
+        // Fetch challenge count
         const challengesResponse = await fetch(`${API_URL}/allChallenges`, {
           headers: {
             'Authorization': `Bearer ${currentUser?.token}`
           }
         });
         
-        // Fetch items count
+        // Fetch item count
         const itemsResponse = await fetch(`${API_URL}/AllItems`, {
           headers: {
             'Authorization': `Bearer ${currentUser?.token}`
           }
         });
         
-        // Fetch transportations count
+        // Fetch transportation count
         const transportationsResponse = await fetch(`${API_URL}/allTransportationTypes`, {
           headers: {
             'Authorization': `Bearer ${currentUser?.token}`

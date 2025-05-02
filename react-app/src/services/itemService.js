@@ -5,20 +5,20 @@ import API_CONFIG from '../config/apiConfig';
 const API_URL = API_CONFIG.BASE_URL;
 
 /**
- * Service for item-related API calls
+ * Item API service
  */
 const itemService = {
   /**
-   * Get all items
+   * Fetches all items
    * @param {string} token - JWT token
-   * @returns {Promise<Array>} - List of items
+   * @returns {Promise<Array>} - Item list
    */
   getAllItems: async (token) => {
     return await apiService.get('/AllItems', token);
   },
   
   /**
-   * Get a specific item by ID
+   * Fetches item by ID
    * @param {number} id - Item ID
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Item data
@@ -35,7 +35,7 @@ const itemService = {
   },
   
   /**
-   * Create a new item
+   * Creates new item
    * @param {Object} itemData - Item data
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Created item
@@ -45,7 +45,7 @@ const itemService = {
   },
   
   /**
-   * Update an existing item
+   * Updates existing item
    * @param {number} id - Item ID
    * @param {Object} itemData - Updated item data
    * @param {string} token - JWT token
@@ -74,7 +74,7 @@ const itemService = {
   },
   
   /**
-   * Delete an item
+   * Deletes item
    * @param {number} id - Item ID
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Response data
@@ -100,7 +100,7 @@ const itemService = {
   },
   
   /**
-   * Buy an item
+   * Purchases item
    * @param {Object} purchaseData - Purchase data (userId, itemId)
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Purchase result

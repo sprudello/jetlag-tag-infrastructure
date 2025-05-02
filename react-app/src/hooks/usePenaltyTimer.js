@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import API_CONFIG from '../config/apiConfig';
 
 /**
- * Custom hook to fetch and manage penalty timer
- * @param {Object} currentUser - Current user object with userId and token
+ * Manages penalty timer state
+ * @param {Object} currentUser - User with userId and token
  * @returns {Object} - Penalty timer state and functions
  */
 const usePenaltyTimer = (currentUser) => {
@@ -30,22 +30,21 @@ const usePenaltyTimer = (currentUser) => {
       if (response.ok) {
         const penaltyData = await response.json();
 
-        // parse UTC end time
+        // Parse UTC end time
         const utcEndTime = new Date(penaltyData.endTime);
 
-        // (optional) local conversion, if you ever need to display it:
+        // Convert to local time
         const offsetMinutes = new Date().getTimezoneOffset();
         const localEndTime = new Date(
           utcEndTime.getTime() - offsetMinutes * 60_000
         );
 
-        // ── THE KEY CHANGE ──
-        // Convert remainingMinutes → totalSeconds
+        // Convert minutes to seconds
         const totalSeconds = Math.round(penaltyData.remainingMinutes * 60);
         const initMin = Math.floor(totalSeconds / 60);
         const initSec = totalSeconds % 60;
 
-        // Store the canonical UTC endTime + full seconds count
+        // Store time data
         setActivePenalty({
           endTime: utcEndTime,
           localEndTime,
@@ -54,7 +53,7 @@ const usePenaltyTimer = (currentUser) => {
           seconds: totalSeconds,
         });
 
-        // Initialize the display immediately
+        // Initialize display
         setPenaltyTimeRemaining({
           minutes: initMin,
           seconds: initSec,
@@ -62,7 +61,7 @@ const usePenaltyTimer = (currentUser) => {
           hasExpired: false,
         });
 
-        // Persist in localStorage using full seconds
+        // Save to localStorage
         localStorage.setItem(
           `penalty_${currentUser.userId}`,
           JSON.stringify({
@@ -125,23 +124,23 @@ const usePenaltyTimer = (currentUser) => {
   }, [currentUser?.userId]);
 
   useEffect(() => {
-    // only start ticking when there *is* an active penalty
+    // Start timer if penalty exists
     if (!activePenalty) {
       setPenaltyTimeRemaining(null);
       return;
     }
   
-    // set up a single interval that runs every 1,000ms
+    // Set up timer interval
     const timerId = setInterval(() => {
       setActivePenalty(prev => {
-        // if somehow it's gone, clear the interval
+        // Clear interval if no penalty
         if (!prev) {
           clearInterval(timerId);
           return null;
         }
   
         const newTotalSeconds = prev.seconds - 1;
-        // expired?
+        // Check if expired
         if (newTotalSeconds <= 0) {
           clearInterval(timerId);
           setPenaltyTimeRemaining(null);
@@ -149,11 +148,11 @@ const usePenaltyTimer = (currentUser) => {
           return null;
         }
   
-        // compute display values
+        // Calculate display values
         const minutes = Math.floor(newTotalSeconds / 60);
         const seconds = newTotalSeconds % 60;
   
-        // update the formatted remaining time
+        // Update formatted time
         setPenaltyTimeRemaining({
           minutes,
           seconds,
@@ -161,7 +160,7 @@ const usePenaltyTimer = (currentUser) => {
           hasExpired: false
         });
   
-        // persist the tick
+        // Save updated time
         if (currentUser?.userId) {
           const stored = localStorage.getItem(`penalty_${currentUser.userId}`);
           if (stored) {
@@ -179,12 +178,12 @@ const usePenaltyTimer = (currentUser) => {
           }
         }
   
-        // return the updated penalty
+        // Return updated penalty
         return { ...prev, seconds: newTotalSeconds };
       });
     }, 1000);
   
-    // clean up once the penalty ends or the component unmounts
+    // Clean up interval
     return () => clearInterval(timerId);
   
     // only re-run this setup when a *new* penalty arrives
@@ -192,11 +191,11 @@ const usePenaltyTimer = (currentUser) => {
     // e.g. the original endTime)
   }, [activePenalty?.endTime, currentUser?.userId]);
 
-  // Refresh penalty data periodically
+  // Periodic refresh
   useEffect(() => {
     if (!currentUser?.userId || !currentUser?.token) return;
     
-    // Refresh every minute to ensure sync with server
+    // Sync with server every minute
     const refreshInterval = setInterval(fetchPenaltyData, 60000);
     
     return () => clearInterval(refreshInterval);

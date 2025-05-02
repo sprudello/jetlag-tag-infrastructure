@@ -1,20 +1,20 @@
 import apiService from './apiService';
 
 /**
- * Service for user-related API calls
+ * User API service
  */
 const userService = {
   /**
-   * Get all users
+   * Fetches all users
    * @param {string} token - JWT token
-   * @returns {Promise<Array>} - List of users
+   * @returns {Promise<Array>} - User list
    */
   getAllUsers: async (token) => {
     return await apiService.get('/allUsers', token);
   },
   
   /**
-   * Get a specific user by ID
+   * Fetches user by ID
    * @param {number} id - User ID
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - User data
@@ -24,7 +24,7 @@ const userService = {
   },
   
   /**
-   * Update an existing user
+   * Updates existing user
    * @param {number} id - User ID
    * @param {Object} userData - Updated user data
    * @param {string} token - JWT token
@@ -35,7 +35,7 @@ const userService = {
   },
   
   /**
-   * Get challenge counts for a user
+   * Fetches user challenge statistics
    * @param {number} userId - User ID
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Challenge counts

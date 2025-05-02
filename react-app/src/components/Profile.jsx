@@ -56,9 +56,9 @@ const Profile = () => {
             isAdmin: user.isAdmin
           });
           
-          // Penalty is now handled by usePenaltyTimer hook
+          // Penalty handled by usePenaltyTimer hook
           
-          // Get challenge statistics
+          // Fetch challenge statistics
           try {
             const stats = await userService.getChallengeCounts(currentUser.userId, currentUser.token);
             setChallengeStats({
@@ -70,9 +70,9 @@ const Profile = () => {
             // Continue with default values if stats fetch fails
           }
           
-          // Fetch user's active challenge
+          // Fetch active challenge
           try {
-            // Use the endpoint that returns challenge details directly
+            // Get challenge details
             const response = await fetch(`${API_CONFIG.BASE_URL}/currentChallenge/${currentUser.userId}`, {
               headers: {
                 'Authorization': `Bearer ${currentUser.token}`
@@ -85,7 +85,7 @@ const Profile = () => {
             
             const data = await response.json();
             
-            // The backend returns the UserChallenge object directly
+            // Process challenge data
             if (data) {
               setActiveChallenge({
                 id: data.challengeCard.id,

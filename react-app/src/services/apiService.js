@@ -1,13 +1,13 @@
 import API_CONFIG from '../config/apiConfig';
 
 /**
- * Base API service for making HTTP requests
+ * Base HTTP request service
  */
 const API_URL = API_CONFIG.BASE_URL;
 
 const apiService = {
   /**
-   * Make a GET request
+   * Performs GET request
    * @param {string} endpoint - API endpoint
    * @param {string} token - JWT token
    * @returns {Promise<any>} - Response data
@@ -32,7 +32,7 @@ const apiService = {
   },
   
   /**
-   * Make a POST request
+   * Performs POST request
    * @param {string} endpoint - API endpoint
    * @param {Object} data - Request body data
    * @param {string} token - JWT token
@@ -61,7 +61,7 @@ const apiService = {
   },
   
   /**
-   * Make a PUT request
+   * Performs PUT request
    * @param {string} endpoint - API endpoint
    * @param {Object} data - Request body data
    * @param {string} token - JWT token
@@ -90,7 +90,7 @@ const apiService = {
   },
   
   /**
-   * Make a DELETE request
+   * Performs DELETE request
    * @param {string} endpoint - API endpoint
    * @param {string} token - JWT token
    * @returns {Promise<any>} - Response data

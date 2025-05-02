@@ -68,7 +68,7 @@ const Home = () => {
     const fetchData = async () => {
       if (!currentUser?.token) return;
       
-      // Fetch user's active challenge
+      // Fetch active challenge
       try {
         // Use the endpoint that returns challenge details directly
         const response = await fetch(`${API_CONFIG.BASE_URL}/currentChallenge/${currentUser.userId}`, {
@@ -108,17 +108,15 @@ const Home = () => {
         setLoading(prev => ({ ...prev, challenges: false }));
       }
 
-      // Fetch user's purchased items
+      // Fetch purchased items
       try {
-        // In a real app, you would fetch all user items from a dedicated endpoint
-        // For now, we'll simulate user-specific purchased items based on user ID
-        // This ensures different users see different items
+        // Simulate user-specific items based on user ID
         const userId = currentUser.userId || 0;
           
-        // Generate user-specific items based on user ID
+        // Generate items based on user ID
         const userSpecificItems = [];
           
-        // Only add items if they "belong" to this user (based on user ID)
+        // Add items based on user ID
         if (userId % 2 === 0) { // Even user IDs get multiplier
           userSpecificItems.push({ 
             id: 1, 

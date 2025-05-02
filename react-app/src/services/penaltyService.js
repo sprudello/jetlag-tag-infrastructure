@@ -5,11 +5,11 @@ import API_CONFIG from '../config/apiConfig';
 const API_URL = API_CONFIG.BASE_URL;
 
 /**
- * Service for penalty-related API calls
+ * Penalty API service
  */
 const penaltyService = {
   /**
-   * Update penalty duration
+   * Updates penalty duration
    * @param {Object} penaltyData - Penalty data
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Updated penalty
@@ -37,9 +37,9 @@ const penaltyService = {
   },
   
   /**
-   * Complete challenge with success
+   * Marks challenge as successful
    * @param {number} userId - User ID
-   * @param {Object} data - Challenge completion data
+   * @param {Object} data - Completion data
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Completion result
    */
@@ -48,9 +48,9 @@ const penaltyService = {
   },
   
   /**
-   * Complete challenge with failure
+   * Marks challenge as failed
    * @param {number} userId - User ID
-   * @param {Object} data - Challenge failure data
+   * @param {Object} data - Failure data
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Failure result
    */
@@ -59,7 +59,7 @@ const penaltyService = {
   },
   
   /**
-   * Pull a challenge card
+   * Draws challenge card
    * @param {number} userId - User ID
    * @param {string} token - JWT token
    * @returns {Promise<Object>} - Challenge card

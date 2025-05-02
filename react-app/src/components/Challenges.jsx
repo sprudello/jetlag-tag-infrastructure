@@ -180,9 +180,7 @@ const Challenges = () => {
         
         setLoading(false);
         
-        // Play a card flip sound effect if available
-        // const flipSound = new Audio('/sounds/card-flip.mp3');
-        // flipSound.play().catch(e => console.log('Audio play failed:', e));
+        // Card flip sound effect would go here
       }, 300);
     }
   };
@@ -199,18 +197,18 @@ const Challenges = () => {
         throw new Error('Failed to assign challenge to user');
       }
       
-      // Redirect to home page to see the active challenge
+      // Show success notification
       setNotification({
         open: true,
         message: 'Challenge accepted! Redirecting to overview...',
         severity: 'success'
       });
       
-      // Reset the card
+      // Reset card state
       setCardFlipped(false);
       setRandomChallenge(null);
       
-      // Redirect to jetlag-tag-infrastructure after a short delay
+      // Redirect to home page
       setTimeout(() => {
         window.location.href = '/jetlag-tag-infrastructure/'; // This will refresh the page and go to the specified path
       }, 1500);
