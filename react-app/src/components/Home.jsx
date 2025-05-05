@@ -110,40 +110,24 @@ const Home = () => {
 
       // Fetch purchased items
       try {
-        // Simulate user-specific items based on user ID
-        const userId = currentUser.userId || 0;
-          
-        // Generate items based on user ID
-        const userSpecificItems = [];
-          
-        // Add items based on user ID
-        if (userId % 2 === 0) { // Even user IDs get multiplier
-          userSpecificItems.push({ 
-            id: 1, 
-            name: "2x Multiplier", 
-            description: "Doubles your challenge rewards", 
-            price: 200, 
-            isActive: true,
-            type: "multiplier",
-            userId: userId
-          });
+        const response = await fetch(`${API_CONFIG.BASE_URL}/api/UserItems/GetAllUserItems/${currentUser.userId}`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser.token}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user items: ${response.status}`);
         }
-          
-        if (userId % 3 === 0) { // User IDs divisible by 3 get veto
-          userSpecificItems.push({ 
-            id: 2, 
-            name: "Challenge Veto", 
-            description: "Skip a challenge without penalty", 
-            price: 300, 
-            isActive: true,
-            type: "veto",
-            userId: userId
-          });
-        }
-          
-        setUserItems(userSpecificItems);
-        // Filter out veto items
-        setVetoItems(userSpecificItems.filter(item => item.type === "veto"));
+        
+        const userItemsData = await response.json();
+        setUserItems(userItemsData);
+        
+        // Filter out veto items based on item name
+        setVetoItems(userItemsData.filter(item => 
+          item.item.name.toLowerCase().includes('veto') || 
+          item.item.description.toLowerCase().includes('veto')
+        ));
       } catch (err) {
         setError(prev => ({ ...prev, userItems: 'Failed to load user items: ' + err.message }));
       } finally {
@@ -440,22 +424,26 @@ const Home = () => {
     </Grid>
   );
 
-  const renderUserItemItem = (item) => (
-    <Grid item xs={12} md={4} key={item.id}>
+  const renderUserItemItem = (userItem) => (
+    <Grid item xs={12} md={4} key={userItem.id}>
       <Card className="item-card user-item-card">
         <CardContent>
           <Typography variant="h6" component="h3" gutterBottom>
-            {item.name}
+            {userItem.item.name}
           </Typography>
           <Typography variant="body2" color="text.secondary" className="card-description">
-            {item.description}
+            {userItem.item.description}
           </Typography>
-          <Chip 
-            label="Owned" 
-            color="success" 
-            size="small" 
-            sx={{ mt: 2 }} 
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+            <Chip 
+              label="Owned" 
+              color="success" 
+              size="small"
+            />
+            <Typography variant="caption" color="text.secondary">
+              Purchased: {new Date(userItem.purchaseDate).toLocaleDateString()}
+            </Typography>
+          </Box>
         </CardContent>
       </Card>
     </Grid>

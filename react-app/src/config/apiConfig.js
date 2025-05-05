@@ -4,7 +4,7 @@
  * Production: https://api.sprudello.ch
  */
 const API_CONFIG = {
-  BASE_URL: 'https://api.sprudello.ch'
+  BASE_URL: 'http://localhost:5296'
 };
 
 export default API_CONFIG;

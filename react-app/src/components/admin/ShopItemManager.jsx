@@ -60,7 +60,7 @@ const ShopItemManager = () => {
           name: item.name,
           description: item.description,
           cost: item.price,
-          multiplier: null, // API doesn't provide multiplier info
+          // multiplier: null,
           active: item.isActive
         }));
         setShopItems(formattedData);

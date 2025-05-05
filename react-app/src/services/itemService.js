@@ -107,7 +107,7 @@ const itemService = {
    */
   buyItem: async (purchaseData, token) => {
     try {
-      const response = await fetch(`${API_URL}/UserItems/buy`, {
+      const response = await fetch(`${API_URL}/buy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

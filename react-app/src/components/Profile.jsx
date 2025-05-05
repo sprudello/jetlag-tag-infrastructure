@@ -104,33 +104,18 @@ const Profile = () => {
           
           // Fetch user's purchased items
           try {
-            // In a real app, you would fetch all user items from a dedicated endpoint
-            // For now, we'll simulate user-specific purchased items based on user ID
-            const userId = currentUser.userId || 0;
-            const userSpecificItems = [];
+            const response = await fetch(`${API_CONFIG.BASE_URL}/api/UserItems/GetAllUserItems/${currentUser.userId}`, {
+              headers: {
+                'Authorization': `Bearer ${currentUser.token}`
+              }
+            });
             
-            // Only add items if they "belong" to this user (based on user ID)
-            if (userId % 2 === 0) { // Even user IDs get multiplier
-              userSpecificItems.push({ 
-                id: 1, 
-                name: "2x Multiplier", 
-                description: "Doubles your challenge rewards", 
-                purchaseDate: new Date().toISOString(),
-                userId: userId
-              });
+            if (!response.ok) {
+              throw new Error(`Failed to fetch user items: ${response.status}`);
             }
             
-            if (userId % 3 === 0) { // User IDs divisible by 3 get veto
-              userSpecificItems.push({ 
-                id: 2, 
-                name: "Challenge Veto", 
-                description: "Skip a challenge without penalty", 
-                purchaseDate: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-                userId: userId
-              });
-            }
-            
-            setUserItems(userSpecificItems);
+            const userItemsData = await response.json();
+            setUserItems(userItemsData);
           } catch (itemsErr) {
             console.error('Error fetching user items:', itemsErr);
           }

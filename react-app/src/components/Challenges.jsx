@@ -112,12 +112,29 @@ const Challenges = () => {
 
     const fetchUserItems = async () => {
       try {
-        // In a real app, we would fetch user items from the API
-        // For now, we'll use an empty array since the API endpoint isn't available yet
-        const userItemsData = [];
+        const response = await fetch(`${API_CONFIG.BASE_URL}/api/UserItems/GetAllUserItems/${currentUser.userId}`, {
+          headers: {
+            'Authorization': `Bearer ${currentUser.token}`
+          }
+        });
+      
+        if (!response.ok) {
+          throw new Error(`Failed to fetch user items: ${response.status}`);
+        }
+      
+        const userItemsData = await response.json();
         setUserItems(userItemsData);
-        setMultiplierItems(userItemsData.filter(item => item.type === "multiplier"));
-        setVetoItems(userItemsData.filter(item => item.type === "veto"));
+      
+        // Filter items based on their names or descriptions
+        setMultiplierItems(userItemsData.filter(item => 
+          item.item.name.toLowerCase().includes('multiplier') || 
+          item.item.description.toLowerCase().includes('multiplier')
+        ));
+      
+        setVetoItems(userItemsData.filter(item => 
+          item.item.name.toLowerCase().includes('veto') || 
+          item.item.description.toLowerCase().includes('veto')
+        ));
       } catch (err) {
         console.error("Error fetching user items:", err);
       }
